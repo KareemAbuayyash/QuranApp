@@ -174,5 +174,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 2,
     fontFamily: 'Cochin',
+    textAlign: 'right',
   },
 });
