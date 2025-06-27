@@ -1,12 +1,23 @@
 // screens/SurahList.js
-import React, { useLayoutEffect } from 'react';
-import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView } from 'react-native';
+import React, { useLayoutEffect, useState, useMemo } from 'react';
+import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput } from 'react-native';
 import surahList from '../assets/quran/surah-list.json';
 
 export default function SurahList({ navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const [search, setSearch] = useState('');
+  const filteredSurahs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return surahList;
+    return surahList.filter(
+      s =>
+        s.name.toLowerCase().includes(q) ||
+        s.englishName.toLowerCase().includes(q)
+    );
+  }, [search]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,8 +30,15 @@ export default function SurahList({ navigation }) {
             <Text style={styles.surahNameHeader}>سور القراَن</Text>
           </View>
         </View>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="بحث عن سورة..."
+          placeholderTextColor="#bfa76f"
+          value={search}
+          onChangeText={setSearch}
+        />
         <FlatList
-          data={surahList}
+          data={filteredSurahs}
           contentContainerStyle={styles.listContent}
           keyExtractor={item => item.number.toString()}
           renderItem={({ item }) => (
@@ -142,5 +160,19 @@ const styles = StyleSheet.create({
     color: '#7c5c1e',
     fontWeight: 'bold',
     marginRight: 12,
+  },
+  searchBar: {
+    backgroundColor: '#fff9ef',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#e0cfa9',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    fontSize: 18,
+    color: '#7c5c1e',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    marginTop: 2,
+    fontFamily: 'Cochin',
   },
 });
