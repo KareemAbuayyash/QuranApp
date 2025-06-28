@@ -18,6 +18,7 @@ export default function SurahList({ navigation }) {
   const [mode, setMode] = useState('surah'); // 'surah' or 'tafsir'
   const [selectedTafsirSurah, setSelectedTafsirSurah] = useState(null);
   const [tafsirPage, setTafsirPage] = useState(0);
+  const [loadingTafsir, setLoadingTafsir] = useState(false);
   const AYAHS_PER_PAGE = 15;
   const { width } = Dimensions.get('window');
 
@@ -70,7 +71,17 @@ export default function SurahList({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.pageBackground}>
         <View style={styles.fullWidthBanner}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.fullWidthBackButton}>
+          <TouchableOpacity
+            onPress={() => {
+              if (mode === 'tafsir' && selectedTafsirSurah) {
+                setSelectedTafsirSurah(null);
+                setTafsirPage(0);
+              } else {
+                navigation.goBack();
+              }
+            }}
+            style={styles.fullWidthBackButton}
+          >
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
           <View style={styles.fullWidthSurahNameContainer}>
@@ -152,12 +163,27 @@ export default function SurahList({ navigation }) {
               <TouchableOpacity
                 style={styles.surahCard}
                 activeOpacity={0.85}
-                onPress={() => { setSelectedTafsirSurah(item.number); setTafsirPage(0); }}
+                onPress={() => {
+                  setLoadingTafsir(true);
+                  setSelectedSurah(item.number); // reuse selectedSurah for loading overlay
+                  setTimeout(() => {
+                    setLoadingTafsir(false);
+                    setSelectedSurah(null);
+                    setSelectedTafsirSurah(item.number);
+                    setTafsirPage(0);
+                  }, 2000);
+                }}
               >
                 <View style={styles.cardRow}>
                   <Text style={styles.englishName}>{item.englishName} — {item.numberOfAyahs} آية</Text>
                   <Text style={styles.arabicName}>{item.number}. {item.name}</Text>
                 </View>
+                {selectedSurah === item.number && loadingTafsir && (
+                  <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="small" color="#7c5c1e" />
+                    <Text style={styles.loadingText}>جاري التحميل...</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             )}
           />
@@ -165,12 +191,6 @@ export default function SurahList({ navigation }) {
         {/* Tafsir Ayah List with Pagination and SurahScreen Style */}
         {mode === 'tafsir' && selectedTafsirSurah && (
           <View style={{ flex: 1 }}>
-            <TouchableOpacity
-              style={{ alignSelf: 'flex-end', margin: 12, padding: 8 }}
-              onPress={() => { setSelectedTafsirSurah(null); setTafsirPage(0); }}
-            >
-              <Text style={{ color: '#7c5c1e', fontSize: 18 }}>← رجوع</Text>
-            </TouchableOpacity>
             <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.scrollContent, { paddingBottom: tafsirTotalPages > 1 ? 80 : 20 }]}> 
               <View style={styles.ayahFrame}>
                 {tafsirPageAyahs.map((item, idx) => (
