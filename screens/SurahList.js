@@ -1,6 +1,6 @@
 // screens/SurahList.js
 import React, { useLayoutEffect, useState, useMemo } from 'react';
-import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput } from 'react-native';
+import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput, ActivityIndicator } from 'react-native';
 import surahList from '../assets/quran/surah-list.json';
 
 export default function SurahList({ navigation }) {
@@ -9,6 +9,9 @@ export default function SurahList({ navigation }) {
   }, [navigation]);
 
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [selectedSurah, setSelectedSurah] = useState(null);
+
   const filteredSurahs = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return surahList;
@@ -18,6 +21,21 @@ export default function SurahList({ navigation }) {
         s.englishName.toLowerCase().includes(q)
     );
   }, [search]);
+
+  const handleSurahPress = (item) => {
+    setLoading(true);
+    setSelectedSurah(item.number);
+    
+    // 2 second delay before navigation
+    setTimeout(() => {
+      setLoading(false);
+      setSelectedSurah(null);
+      navigation.navigate('SurahScreen', {
+        number: item.number,
+        name: item.name,
+      });
+    }, 2000);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -43,19 +61,24 @@ export default function SurahList({ navigation }) {
           keyExtractor={item => item.number.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.surahCard}
+              style={[
+                styles.surahCard,
+                selectedSurah === item.number && styles.surahCardLoading
+              ]}
               activeOpacity={0.85}
-              onPress={() =>
-                navigation.navigate('SurahScreen', {
-                  number: item.number,
-                  name: item.name,
-                })
-              }
+              onPress={() => handleSurahPress(item)}
+              disabled={loading}
             >
               <View style={styles.cardRow}>
                 <Text style={styles.englishName}>{item.englishName} — {item.numberOfAyahs} آية</Text>
                 <Text style={styles.arabicName}>{item.number}. {item.name}</Text>
               </View>
+              {selectedSurah === item.number && loading && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="small" color="#7c5c1e" />
+                  <Text style={styles.loadingText}>جاري التحميل...</Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
         />
@@ -131,6 +154,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.13,
     shadowRadius: 12,
     elevation: 6,
+    position: 'relative',
+  },
+  surahCardLoading: {
+    opacity: 0.7,
   },
   cardRow: {
     flexDirection: 'row',
@@ -175,5 +202,24 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: 'Cochin',
     textAlign: 'right',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(248, 236, 212, 0.9)',
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#7c5c1e',
+    fontFamily: 'Cochin',
+    fontWeight: 'bold',
   },
 });
