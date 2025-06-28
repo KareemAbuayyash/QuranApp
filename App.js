@@ -6,17 +6,31 @@ import HomeScreen from './screens/HomeScreen';
 import SurahList from './screens/SurahList';
 import SurahScreen from './screens/SurahScreen';
 import SearchScreen from './screens/SearchScreen';
+import { useFonts } from 'expo-font';
+import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Uthmani: require('./assets/fonts/Uthmani.otf.otf'),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fdf6ec' }}>
+        <ActivityIndicator size="large" color="#bfa76f" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home">
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
-          options={{ title: 'الصفحة الرئيسية' }} 
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="SurahList"
