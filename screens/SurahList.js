@@ -1,6 +1,6 @@
 // screens/SurahList.js
-import React, { useLayoutEffect, useState, useMemo } from 'react';
-import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput, ActivityIndicator } from 'react-native';
+import React, { useLayoutEffect, useState, useMemo, useRef } from 'react';
+import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput, ActivityIndicator, Animated } from 'react-native';
 import surahList from '../assets/quran/surah-list.json';
 
 export default function SurahList({ navigation }) {
@@ -11,6 +11,9 @@ export default function SurahList({ navigation }) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedSurah, setSelectedSurah] = useState(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const flatListRef = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const filteredSurahs = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -37,6 +40,21 @@ export default function SurahList({ navigation }) {
     }, 2000);
   };
 
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: (event) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        setShowScrollToTop(offsetY > 200);
+      },
+    }
+  );
+
+  const scrollToTop = () => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.pageBackground}>
@@ -56,9 +74,12 @@ export default function SurahList({ navigation }) {
           onChangeText={setSearch}
         />
         <FlatList
+          ref={flatListRef}
           data={filteredSurahs}
           contentContainerStyle={styles.listContent}
           keyExtractor={item => item.number.toString()}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
@@ -82,6 +103,16 @@ export default function SurahList({ navigation }) {
             </TouchableOpacity>
           )}
         />
+        
+        {showScrollToTop && (
+          <TouchableOpacity
+            style={styles.scrollToTopButton}
+            onPress={scrollToTop}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.scrollToTopArrow}>↑</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -220,6 +251,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#7c5c1e',
     fontFamily: 'Cochin',
+    fontWeight: 'bold',
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#7c5c1e',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#bfa76f',
+  },
+  scrollToTopArrow: {
+    fontSize: 24,
+    color: '#fdf6ec',
     fontWeight: 'bold',
   },
 });
