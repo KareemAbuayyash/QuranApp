@@ -1,77 +1,114 @@
 // screens/HomeScreen.js
 import React from 'react';
-import { View, Button, StyleSheet, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 
 export default function HomeScreen({ navigation }) {
   return (
-    <View style={styles.container}>
-      <Image source={require('../assets/icon.png')} style={styles.logo} />
-      <Text style={styles.headline}>مرحبًا بك في تطبيق القرآن</Text>
-      <View style={styles.divider} />
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SurahList')}>
-        <Text style={styles.buttonText}>عرض جميع السور</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SearchScreen')}>
-        <Text style={styles.buttonText}>بحث عن آية</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.backgroundDecor} />
+      <View style={styles.card}>
+        <Image source={require('../assets/quran.png')} style={styles.logo} />
+        <Text style={styles.headline}>مرحبًا بك في تطبيق القرآن</Text>
+        <Text style={styles.subtitle}>استكشف السور وابحث عن الآيات وتفسيرها بسهولة</Text>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SurahList')}>
+          <Text style={styles.buttonText}>الفهرس</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SearchScreen')}>
+          <Text style={styles.buttonText}>البحث عن آية وتفسيرها</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#fdf6ec',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#f6f9f4', // Soft greenish background
+    justifyContent: 'center',
+  },
+  backgroundDecor: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#fdf6ec',
+  },
+  card: {
+    backgroundColor: '#fff9ef',
+    borderRadius: 28,
+    borderWidth: 2.5,
+    borderColor: '#bfa76f',
+    paddingVertical: 38,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 10,
+    marginHorizontal: 18,
   },
   logo: {
     width: 120,
     height: 120,
-    marginBottom: 16,
+    marginBottom: 18,
     borderRadius: 32,
-    shadowColor: '#2e7d32',
+    borderWidth: 2,
+    borderColor: '#bfa76f',
+    backgroundColor: '#f8ecd4',
+    shadowColor: '#bfa76f',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
     elevation: 8,
   },
   headline: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#388e3c',
-    marginBottom: 18,
+    color: '#7c5c1e',
+    marginBottom: 8,
     textAlign: 'center',
     fontFamily: 'Cochin',
     letterSpacing: 1,
-    textShadowColor: '#c9b037',
+    textShadowColor: '#e0cfa9',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
+  subtitle: {
+    fontSize: 16,
+    color: '#bfa76f',
+    marginBottom: 18,
+    textAlign: 'center',
+    fontFamily: 'Cochin',
+    opacity: 0.95,
+  },
   divider: {
-    width: 80,
+    width: 90,
     height: 3,
-    backgroundColor: '#c9b037',
+    backgroundColor: '#bfa76f',
     borderRadius: 2,
-    marginBottom: 28,
+    marginBottom: 30,
   },
   button: {
-    backgroundColor: '#388e3c',
+    backgroundColor: '#7c5c1e',
+    borderColor: '#bfa76f',
+    borderWidth: 2,
     paddingVertical: 14,
-    paddingHorizontal: 40,
+    paddingHorizontal: 44,
     borderRadius: 30,
     marginVertical: 10,
-    shadowColor: '#c9b037',
+    shadowColor: '#bfa76f',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
     elevation: 4,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
+    color: '#fff9ef',
+    fontSize: 19,
     fontWeight: 'bold',
     letterSpacing: 1,
+    fontFamily: 'Cochin',
   },
 });

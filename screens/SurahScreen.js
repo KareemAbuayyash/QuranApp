@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
     color: '#2c2c2c',
     fontSize: 24,
     lineHeight: 40,
+    fontFamily: 'Uthmani',
   },
   ayahNumber: {
     color: '#bfa76f',
