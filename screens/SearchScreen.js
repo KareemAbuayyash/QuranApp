@@ -23,15 +23,61 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// Enhanced Arabic text normalization function
+const normalizeArabicText = (text) => {
+  if (!text) return '';
+  
+  let normalized = text;
+  
+  // Remove all Arabic diacritics and marks
+  normalized = normalized.replace(/[\u064B-\u065F]/g, ''); // Standard diacritics
+  normalized = normalized.replace(/[\u0670]/g, ''); // Superscript Alef
+  normalized = normalized.replace(/[\u06D6-\u06ED]/g, ''); // Quranic marks
+  normalized = normalized.replace(/[\u06DC-\u06E4]/g, ''); // Additional marks
+  normalized = normalized.replace(/[\u06E7-\u06E8]/g, ''); // More marks
+  normalized = normalized.replace(/[\u06EA-\u06ED]/g, ''); // Extended marks
+  normalized = normalized.replace(/[\u08F0-\u08FF]/g, ''); // Extended Arabic marks
+  
+  // Normalize letter forms
+  const letterMappings = {
+    // Alef variations
+    'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا',
+    // Ya variations  
+    'ى': 'ي', 'ئ': 'ي',
+    // Ta Marbuta
+    'ة': 'ه',
+    // Hamza variations
+    'ؤ': 'و',
+    'ء': '', // Remove standalone hamza for better matching
+    // Remove Tatweel (kashida)
+    'ـ': ''
+  };
+  
+  // Apply letter mappings
+  for (const [original, replacement] of Object.entries(letterMappings)) {
+    normalized = normalized.replace(new RegExp(original, 'g'), replacement);
+  }
+  
+  // Clean up and normalize
+  return normalized
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .trim()
+    .toLowerCase();
+};
+
 export default function SearchScreen() {
   const [surahQuery, setSurahQuery] = useState('');
   const [ayahNumber, setAyahNumber] = useState('');
+  const [ayahTextQuery, setAyahTextQuery] = useState(''); // New field for text search
   const [result, setResult] = useState(null);
+  const [results, setResults] = useState([]); // For multiple results when searching by text
   const [error, setError] = useState('');
   const [showSurahModal, setShowSurahModal] = useState(false);
   const [showAyahModal, setShowAyahModal] = useState(false);
   const [modalSurahSearch, setModalSurahSearch] = useState('');
   const [selectedSurahObj, setSelectedSurahObj] = useState(null);
+  const [ayahModalSearch, setAyahModalSearch] = useState('');
+  const [searchMode, setSearchMode] = useState('specific'); // 'specific' or 'text'
 
   // Filter surahs for modal search
   const filteredSurahs = useMemo(() => {
@@ -50,6 +96,25 @@ export default function SearchScreen() {
     return [];
   }, [selectedSurahObj]);
 
+  // Generate ayah objects for selected surah
+  const ayahObjects = useMemo(() => {
+    if (selectedSurahObj && surahs[selectedSurahObj.number]) {
+      return surahs[selectedSurahObj.number].ayahs;
+    }
+    return [];
+  }, [selectedSurahObj]);
+
+  // Filter ayahs for modal search
+  const filteredAyahs = useMemo(() => {
+    const q = ayahModalSearch.trim();
+    if (!q) return ayahObjects;
+    const normalizedQuery = normalizeArabicText(q);
+    return ayahObjects.filter(
+      a => a.number.toString().includes(q) || 
+           (a.text && normalizeArabicText(a.text).includes(normalizedQuery))
+    );
+  }, [ayahModalSearch, ayahObjects]);
+
   const handleOpenSurahModal = () => {
     setShowSurahModal(true);
     setModalSurahSearch('');
@@ -67,49 +132,151 @@ export default function SearchScreen() {
   };
 
   const handleAyahSelect = (ayahNum) => {
-    setAyahNumber(ayahNum);
+    setAyahNumber(ayahNum.toString());
     setShowAyahModal(false);
+    setAyahModalSearch('');
   };
 
   const handleSearch = () => {
     setError('');
     setResult(null);
+    setResults([]);
+
+    // If searching by text
+    if (searchMode === 'text' && ayahTextQuery.trim()) {
+      const query = ayahTextQuery.trim();
+      const normalizedQuery = normalizeArabicText(query);
+      const foundResults = [];
+
+      // If query is too short, require at least 2 characters
+      if (normalizedQuery.length < 2) {
+        setError('يرجى إدخال كلمة أطول للبحث (حرفين على الأقل).');
+        return;
+      }
+
+      // Search through all surahs
+      Object.keys(surahs).forEach(surahNum => {
+        const surah = surahs[surahNum];
+        if (surah && surah.ayahs) {
+          surah.ayahs.forEach(ayah => {
+            if (ayah.text) {
+              const normalizedAyahText = normalizeArabicText(ayah.text);
+              
+              // Check if the normalized query exists in the normalized ayah text
+              if (normalizedAyahText.includes(normalizedQuery)) {
+                foundResults.push({
+                  ...ayah,
+                  surahName: surah.name,
+                  surahNumber: surah.number,
+                  // Add highlighting info for display
+                  originalText: ayah.text,
+                  matchedQuery: query
+                });
+              }
+            }
+          });
+        }
+      });
+
+      if (foundResults.length === 0) {
+        setError(`لم يتم العثور على آيات تحتوي على "${query}". جرب كلمات أخرى أو تأكد من الإملاء.`);
+        return;
+      }
+
+      // Sort results by surah number and ayah number
+      foundResults.sort((a, b) => {
+        if (a.surahNumber !== b.surahNumber) {
+          return a.surahNumber - b.surahNumber;
+        }
+        return a.number - b.number;
+      });
+
+      setResults(foundResults);
+      return;
+    }
+
+    // Original specific search logic
     let sNum = surahQuery.split(' - ')[0];
     if (!sNum) sNum = surahQuery;
     const aNum = parseInt(ayahNumber, 10);
+    
     if (!sNum || !aNum) {
       setError('رجاءً أدخل اسم أو رقم السورة ورقم آية صحيحين.');
       return;
     }
+    
     const surah = surahs[sNum];
     if (!surah) {
       setError(`السورة غير موجودة.`);
       return;
     }
+    
     const ayah = surah.ayahs.find(a => a.number === aNum);
     if (!ayah) {
       setError(`الآية رقم ${aNum} في السورة رقم ${sNum} غير موجودة.`);
       return;
     }
+    
     setResult({ ...ayah, surahName: surah.name, surahNumber: surah.number });
   };
 
   const clearSearch = () => {
     setSurahQuery('');
     setAyahNumber('');
+    setAyahTextQuery('');
     setSelectedSurahObj(null);
     setResult(null);
+    setResults([]);
     setError('');
   };
 
-  const handleShare = async () => {
-    if (!result) return;
+  const handleShare = async (ayahData) => {
+    if (!ayahData) return;
     try {
       await Share.share({
-        message: `سورة ${result.surahName} - الآية ${result.number}:\n${result.text}`
+        message: `سورة ${ayahData.surahName} - الآية ${ayahData.number}:\n${ayahData.text}`
       });
     } catch (e) {}
   };
+
+  const isSearchEnabled = () => {
+    if (searchMode === 'text') {
+      return ayahTextQuery.trim().length > 0;
+    }
+    return surahQuery && ayahNumber;
+  };
+
+  const renderAyahResult = (ayahData, index = 0) => (
+    <View key={`${ayahData.surahNumber}-${ayahData.number}`} style={styles.resultCard}>
+      <View style={styles.resultHeader}>
+        <Text style={styles.resultSurah}>
+          سورة {ayahData.surahName} - الآية {ayahData.number}
+        </Text>
+        <View style={styles.resultNumber}>
+          <Text style={styles.resultNumberText}>{ayahData.surahNumber}</Text>
+        </View>
+      </View>
+      <View style={styles.ayahContainer}>
+        <Text style={styles.resultAyah} selectable>
+          {ayahData.text}
+        </Text>
+      </View>
+      {ayahData.tafsir && (
+        <View style={styles.tafsirContainer}>
+          <Text style={styles.tafsirLabel}>التفسير:</Text>
+          <Text style={styles.resultTafsir}>{ayahData.tafsir}</Text>
+        </View>
+      )}
+      <TouchableOpacity 
+        style={styles.shareButton} 
+        onPress={() => handleShare(ayahData)} 
+        activeOpacity={0.8}
+      >
+        <Ionicons name="share-social-outline" size={18} color="#7c5c1e" style={{ marginLeft: 6 }} />
+        <Text style={styles.shareButtonText}>مشاركة الآية</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -141,79 +308,118 @@ export default function SearchScreen() {
                   <Ionicons name="refresh-outline" size={20} color="#bfa76f" />
                 </TouchableOpacity>
               </View>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.label}>اسم السورة</Text>
+
+              {/* Search Mode Toggle */}
+              <View style={styles.toggleContainer}>
                 <TouchableOpacity
-                  style={styles.input}
-                  onPress={handleOpenSurahModal}
+                  style={[styles.toggleButton, searchMode === 'specific' && styles.toggleButtonActive]}
+                  onPress={() => setSearchMode('specific')}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: surahQuery ? '#2c2c2c' : '#bfa76f', fontSize: 16, textAlign: 'right', fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif' }}>
-                    {surahQuery ? surahQuery : 'اختر السورة...'}
+                  <Text style={[styles.toggleButtonText, searchMode === 'specific' && styles.toggleButtonTextActive]}>
+                    بحث محدد
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color="#bfa76f" style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
-              </View>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.label}>رقم الآية</Text>
                 <TouchableOpacity
-                  style={[styles.input, !selectedSurahObj && styles.inputDisabled]}
-                  onPress={selectedSurahObj ? handleOpenAyahModal : undefined}
-                  activeOpacity={selectedSurahObj ? 0.8 : 1}
-                  disabled={!selectedSurahObj}
+                  style={[styles.toggleButton, searchMode === 'text' && styles.toggleButtonActive]}
+                  onPress={() => setSearchMode('text')}
+                  activeOpacity={0.8}
                 >
-                  <Text style={{ color: ayahNumber ? '#2c2c2c' : '#bfa76f', fontSize: 16, textAlign: 'right', fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif' }}>
-                    {ayahNumber ? ayahNumber : selectedSurahObj ? 'اختر رقم الآية...' : 'اختر السورة أولاً'}
+                  <Text style={[styles.toggleButtonText, searchMode === 'text' && styles.toggleButtonTextActive]}>
+                    بحث في النص
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color="#bfa76f" style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
               </View>
+
+              {searchMode === 'specific' ? (
+                <>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.label}>اسم السورة</Text>
+                    <TouchableOpacity
+                      style={styles.input}
+                      onPress={handleOpenSurahModal}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="chevron-down" size={18} color="#bfa76f" style={{ marginLeft: 0, marginRight: 8 }} />
+                      <Text style={{ color: surahQuery ? '#2c2c2c' : '#bfa76f', fontSize: 16, textAlign: 'right', fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif', flex: 1 }}>
+                        {surahQuery ? surahQuery : 'اختر السورة...'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.label}>رقم الآية</Text>
+                    <TouchableOpacity
+                      style={[styles.input, !selectedSurahObj && styles.inputDisabled]}
+                      onPress={selectedSurahObj ? handleOpenAyahModal : undefined}
+                      activeOpacity={selectedSurahObj ? 0.8 : 1}
+                      disabled={!selectedSurahObj}
+                    >
+                      <Ionicons name="chevron-down" size={18} color="#bfa76f" style={{ marginLeft: 0, marginRight: 8 }} />
+                      <Text style={{ color: ayahNumber ? '#2c2c2c' : '#bfa76f', fontSize: 16, textAlign: 'right', fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif', flex: 1 }}>
+                        {ayahNumber ? ayahNumber : selectedSurahObj ? 'اختر رقم الآية...' : 'اختر السورة أولاً'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>ابحث في نص الآيات</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="أدخل كلمة أو جملة للبحث (مثال: اعوذ، الصلاة، الله)"
+                    placeholderTextColor="#bfa76f"
+                    value={ayahTextQuery}
+                    onChangeText={setAyahTextQuery}
+                    textAlign="right"
+                    multiline={false}
+                    returnKeyType="search"
+                    onSubmitEditing={handleSearch}
+                  />
+                  <Text style={styles.searchHint}>
+                    💡 البحث يتجاهل الحركات التشكيلية والهمزات المختلفة
+                  </Text>
+                </View>
+              )}
+
               <TouchableOpacity 
-                style={[styles.button, (!surahQuery || !ayahNumber) && styles.buttonDisabled]} 
+                style={[styles.button, !isSearchEnabled() && styles.buttonDisabled]} 
                 onPress={handleSearch} 
                 activeOpacity={0.8}
-                disabled={!surahQuery || !ayahNumber}
+                disabled={!isSearchEnabled()}
               >
                 <Ionicons name="search" size={20} color="#fff9ef" style={styles.buttonIcon} />
                 <Text style={styles.buttonText}>بحث</Text>
               </TouchableOpacity>
+
               {error ? (
                 <View style={styles.errorContainer}>
                   <Ionicons name="warning-outline" size={20} color="#b53a3a" />
                   <Text style={styles.error}>{error}</Text>
                 </View>
               ) : null}
-              {result && (
-                <View style={styles.resultCard}>
-                  <View style={styles.resultHeader}>
-                    <Text style={styles.resultSurah}>
-                      سورة {result.surahName} - الآية {result.number}
+
+              {/* Results for text search */}
+              {results.length > 0 && (
+                <View style={styles.resultsContainer}>
+                  <Text style={styles.resultsHeader}>
+                    تم العثور على {results.length} آية
+                  </Text>
+                  {results.slice(0, 10).map((ayahData, index) => renderAyahResult(ayahData, index))}
+                  {results.length > 10 && (
+                    <Text style={styles.moreResultsText}>
+                      وعدد {results.length - 10} آية أخرى...
                     </Text>
-                    <View style={styles.resultNumber}>
-                      <Text style={styles.resultNumberText}>{result.surahNumber}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.ayahContainer}>
-                    <Text style={styles.resultAyah} selectable>
-                      {result.text}
-                    </Text>
-                  </View>
-                  {result.tafsir && (
-                    <View style={styles.tafsirContainer}>
-                      <Text style={styles.tafsirLabel}>التفسير:</Text>
-                      <Text style={styles.resultTafsir}>{result.tafsir}</Text>
-                    </View>
                   )}
-                  <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.8}>
-                    <Ionicons name="share-social-outline" size={18} color="#7c5c1e" style={{ marginLeft: 6 }} />
-                    <Text style={styles.shareButtonText}>مشاركة الآية</Text>
-                  </TouchableOpacity>
                 </View>
               )}
+
+              {/* Single result for specific search */}
+              {result && renderAyahResult(result)}
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
       {/* Surah Selection Modal */}
       <Modal
         visible={showSurahModal}
@@ -258,6 +464,7 @@ export default function SearchScreen() {
           />
         </View>
       </Modal>
+
       {/* Ayah Selection Modal */}
       <Modal
         visible={showAyahModal}
@@ -276,15 +483,27 @@ export default function SearchScreen() {
               <Ionicons name="close" size={22} color="#bfa76f" />
             </TouchableOpacity>
           </View>
+          <TextInput
+            style={styles.modalSearchInput}
+            placeholder="بحث برقم أو نص الآية..."
+            placeholderTextColor="#bfa76f"
+            value={ayahModalSearch}
+            onChangeText={setAyahModalSearch}
+            textAlign="right"
+            autoFocus
+          />
           <FlatList
-            data={ayahNumbers}
-            keyExtractor={item => item}
+            data={filteredAyahs}
+            keyExtractor={item => item.number.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.modalAyahItem}
-                onPress={() => handleAyahSelect(item)}
+                onPress={() => handleAyahSelect(item.number)}
               >
-                <Text style={styles.modalAyahNum}>{item}</Text>
+                <View style={styles.modalAyahRow}>
+                  <Text style={styles.modalAyahNum}>{item.number}</Text>
+                  <Text style={styles.modalAyahText}>{item.text}</Text>
+                </View>
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={true}
@@ -350,6 +569,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(191, 167, 111, 0.1)',
   },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f8ecd4',
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: 20,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#7c5c1e',
+    shadowColor: '#7c5c1e',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    color: '#7c5c1e',
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
+  },
+  toggleButtonTextActive: {
+    color: '#ffffff',
+  },
   fieldGroup: {
     width: '100%',
     marginBottom: 20,
@@ -363,6 +613,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#e0cfa9',
+    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
+    paddingHorizontal: 16,
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  textInput: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 2,
@@ -378,6 +644,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    minHeight: 50,
+  },
+  searchHint: {
+    fontSize: 12,
+    color: '#bfa76f',
+    textAlign: 'right',
+    marginTop: 6,
+    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
+    fontStyle: 'italic',
   },
   inputDisabled: {
     backgroundColor: '#f8ecd4',
@@ -432,6 +707,25 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     flex: 1,
   },
+  resultsContainer: {
+    marginTop: 20,
+  },
+  resultsHeader: {
+    fontSize: 18,
+    color: '#7c5c1e',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
+  },
+  moreResultsText: {
+    fontSize: 14,
+    color: '#bfa76f',
+    textAlign: 'center',
+    marginTop: 12,
+    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
+    fontStyle: 'italic',
+  },
   resultCard: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
@@ -484,7 +778,7 @@ const styles = StyleSheet.create({
   resultAyah: {
     fontSize: 20,
     color: '#2c2c2c',
-    fontFamily: Platform.OS === 'ios' ? 'Damascus' : 'serif',
+    fontFamily: 'Uthmani',
     textAlign: 'right',
     lineHeight: 32,
     letterSpacing: 0.5,
@@ -652,10 +946,28 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f8ecd4',
     alignItems: 'flex-end',
   },
+  modalAyahRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+  },
   modalAyahNum: {
-    fontSize: 18,
-    color: '#7c5c1e',
+    fontSize: 16,
+    color: '#fff',
+    backgroundColor: '#bfa76f',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    minWidth: 32,
+    textAlign: 'center',
+    marginLeft: 12,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
+  },
+  modalAyahText: {
+    fontSize: 18,
+    color: '#2c2c2c',
+    fontFamily: 'Uthmani',
+    textAlign: 'right',
+    flex: 1,
+    lineHeight: 32,
   },
 });
