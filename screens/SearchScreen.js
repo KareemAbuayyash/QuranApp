@@ -4,7 +4,6 @@ import {
   View, 
   TextInput, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   ScrollView, 
   Platform, 
@@ -20,6 +19,7 @@ import surahs from '../assets/quran/surahs';
 import surahList from '../assets/quran/surah-list.json';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import searchScreenStyles from '../styles/SearchScreenStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -247,61 +247,61 @@ export default function SearchScreen() {
   };
 
   const renderAyahResult = (ayahData, index = 0) => (
-    <View key={`${ayahData.surahNumber}-${ayahData.number}`} style={styles.resultCard}>
-      <View style={styles.resultHeader}>
-        <Text style={styles.resultSurah}>
+    <View key={`${ayahData.surahNumber}-${ayahData.number}`} style={searchScreenStyles.resultCard}>
+      <View style={searchScreenStyles.resultHeader}>
+        <Text style={searchScreenStyles.resultSurah}>
           سورة {ayahData.surahName} - الآية {ayahData.number}
         </Text>
-        <View style={styles.resultNumber}>
-          <Text style={styles.resultNumberText}>{ayahData.surahNumber}</Text>
+        <View style={searchScreenStyles.resultNumber}>
+          <Text style={searchScreenStyles.resultNumberText}>{ayahData.surahNumber}</Text>
         </View>
       </View>
-      <View style={styles.ayahContainer}>
-        <Text style={styles.resultAyah} selectable>
+      <View style={searchScreenStyles.ayahContainer}>
+        <Text style={searchScreenStyles.resultAyah} selectable>
           {ayahData.text}
         </Text>
       </View>
       {ayahData.tafsir && (
-        <View style={styles.tafsirContainer}>
-          <Text style={styles.tafsirLabel}>التفسير:</Text>
-          <Text style={styles.resultTafsir}>{ayahData.tafsir}</Text>
+        <View style={searchScreenStyles.tafsirContainer}>
+          <Text style={searchScreenStyles.tafsirLabel}>التفسير:</Text>
+          <Text style={searchScreenStyles.resultTafsir}>{ayahData.tafsir}</Text>
         </View>
       )}
       <TouchableOpacity 
-        style={styles.shareButton} 
+        style={searchScreenStyles.shareButton} 
         onPress={() => handleShare(ayahData)} 
         activeOpacity={0.8}
       >
         <Ionicons name="share-social-outline" size={18} color="#7c5c1e" style={{ marginLeft: 6 }} />
-        <Text style={styles.shareButtonText}>مشاركة الآية</Text>
+        <Text style={searchScreenStyles.shareButtonText}>مشاركة الآية</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={searchScreenStyles.safeArea}>
       <LinearGradient
         colors={["#fdf6ec", "#f8ecd4", "#e0cfa9"]}
-        style={StyleSheet.absoluteFill}
+        style={searchScreenStyles.absoluteFill}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
       <KeyboardAvoidingView 
-        style={styles.keyboardView}
+        style={searchScreenStyles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
+          contentContainerStyle={searchScreenStyles.scrollContainer} 
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
-            <View style={styles.card}>
-              <View style={styles.header}>
-                <Text style={styles.title}>بحث عن آية</Text>
+          <View style={searchScreenStyles.container}>
+            <View style={searchScreenStyles.card}>
+              <View style={searchScreenStyles.header}>
+                <Text style={searchScreenStyles.title}>بحث عن آية</Text>
                 <TouchableOpacity 
-                  style={styles.clearButton} 
+                  style={searchScreenStyles.clearButton} 
                   onPress={clearSearch}
                   activeOpacity={0.7}
                 >
@@ -310,22 +310,22 @@ export default function SearchScreen() {
               </View>
 
               {/* Search Mode Toggle */}
-              <View style={styles.toggleContainer}>
+              <View style={searchScreenStyles.toggleContainer}>
                 <TouchableOpacity
-                  style={[styles.toggleButton, searchMode === 'specific' && styles.toggleButtonActive]}
+                  style={[searchScreenStyles.toggleButton, searchMode === 'specific' && searchScreenStyles.toggleButtonActive]}
                   onPress={() => setSearchMode('specific')}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.toggleButtonText, searchMode === 'specific' && styles.toggleButtonTextActive]}>
+                  <Text style={[searchScreenStyles.toggleButtonText, searchMode === 'specific' && searchScreenStyles.toggleButtonTextActive]}>
                     بحث محدد
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.toggleButton, searchMode === 'text' && styles.toggleButtonActive]}
+                  style={[searchScreenStyles.toggleButton, searchMode === 'text' && searchScreenStyles.toggleButtonActive]}
                   onPress={() => setSearchMode('text')}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.toggleButtonText, searchMode === 'text' && styles.toggleButtonTextActive]}>
+                  <Text style={[searchScreenStyles.toggleButtonText, searchMode === 'text' && searchScreenStyles.toggleButtonTextActive]}>
                     بحث في النص
                   </Text>
                 </TouchableOpacity>
@@ -333,10 +333,10 @@ export default function SearchScreen() {
 
               {searchMode === 'specific' ? (
                 <>
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.label}>اسم السورة</Text>
+                  <View style={searchScreenStyles.fieldGroup}>
+                    <Text style={searchScreenStyles.label}>اسم السورة</Text>
                     <TouchableOpacity
-                      style={styles.input}
+                      style={searchScreenStyles.input}
                       onPress={handleOpenSurahModal}
                       activeOpacity={0.8}
                     >
@@ -346,10 +346,10 @@ export default function SearchScreen() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.label}>رقم الآية</Text>
+                  <View style={searchScreenStyles.fieldGroup}>
+                    <Text style={searchScreenStyles.label}>رقم الآية</Text>
                     <TouchableOpacity
-                      style={[styles.input, !selectedSurahObj && styles.inputDisabled]}
+                      style={[searchScreenStyles.input, !selectedSurahObj && searchScreenStyles.inputDisabled]}
                       onPress={selectedSurahObj ? handleOpenAyahModal : undefined}
                       activeOpacity={selectedSurahObj ? 0.8 : 1}
                       disabled={!selectedSurahObj}
@@ -362,10 +362,10 @@ export default function SearchScreen() {
                   </View>
                 </>
               ) : (
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.label}>ابحث في نص الآيات</Text>
+                <View style={searchScreenStyles.fieldGroup}>
+                  <Text style={searchScreenStyles.label}>ابحث في نص الآيات</Text>
                   <TextInput
-                    style={styles.textInput}
+                    style={searchScreenStyles.textInput}
                     placeholder="أدخل كلمة أو جملة للبحث (مثال: اعوذ، الصلاة، الله)"
                     placeholderTextColor="#bfa76f"
                     value={ayahTextQuery}
@@ -375,38 +375,38 @@ export default function SearchScreen() {
                     returnKeyType="search"
                     onSubmitEditing={handleSearch}
                   />
-                  <Text style={styles.searchHint}>
+                  <Text style={searchScreenStyles.searchHint}>
                     💡 البحث يتجاهل الحركات التشكيلية والهمزات المختلفة
                   </Text>
                 </View>
               )}
 
               <TouchableOpacity 
-                style={[styles.button, !isSearchEnabled() && styles.buttonDisabled]} 
+                style={[searchScreenStyles.button, !isSearchEnabled() && searchScreenStyles.buttonDisabled]} 
                 onPress={handleSearch} 
                 activeOpacity={0.8}
                 disabled={!isSearchEnabled()}
               >
-                <Ionicons name="search" size={20} color="#fff9ef" style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>بحث</Text>
+                <Ionicons name="search" size={20} color="#fff9ef" style={searchScreenStyles.buttonIcon} />
+                <Text style={searchScreenStyles.buttonText}>بحث</Text>
               </TouchableOpacity>
 
               {error ? (
-                <View style={styles.errorContainer}>
+                <View style={searchScreenStyles.errorContainer}>
                   <Ionicons name="warning-outline" size={20} color="#b53a3a" />
-                  <Text style={styles.error}>{error}</Text>
+                  <Text style={searchScreenStyles.error}>{error}</Text>
                 </View>
               ) : null}
 
               {/* Results for text search */}
               {results.length > 0 && (
-                <View style={styles.resultsContainer}>
-                  <Text style={styles.resultsHeader}>
+                <View style={searchScreenStyles.resultsContainer}>
+                  <Text style={searchScreenStyles.resultsHeader}>
                     تم العثور على {results.length} آية
                   </Text>
                   {results.slice(0, 10).map((ayahData, index) => renderAyahResult(ayahData, index))}
                   {results.length > 10 && (
-                    <Text style={styles.moreResultsText}>
+                    <Text style={searchScreenStyles.moreResultsText}>
                       وعدد {results.length - 10} آية أخرى...
                     </Text>
                   )}
@@ -427,16 +427,16 @@ export default function SearchScreen() {
         animationType="slide"
         onRequestClose={() => setShowSurahModal(false)}
       >
-        <View style={styles.modalOverlay} />
-        <View style={styles.selectionModal}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>اختر السورة</Text>
-            <TouchableOpacity onPress={() => setShowSurahModal(false)} style={styles.modalCloseBtn}>
+        <View style={searchScreenStyles.modalOverlay} />
+        <View style={searchScreenStyles.selectionModal}>
+          <View style={searchScreenStyles.modalHeader}>
+            <Text style={searchScreenStyles.modalTitle}>اختر السورة</Text>
+            <TouchableOpacity onPress={() => setShowSurahModal(false)} style={searchScreenStyles.modalCloseBtn}>
               <Ionicons name="close" size={22} color="#bfa76f" />
             </TouchableOpacity>
           </View>
           <TextInput
-            style={styles.modalSearchInput}
+            style={searchScreenStyles.modalSearchInput}
             placeholder="بحث باسم أو رقم السورة..."
             placeholderTextColor="#bfa76f"
             value={modalSurahSearch}
@@ -449,18 +449,18 @@ export default function SearchScreen() {
             keyExtractor={item => item.number.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.modalSurahItem}
+                style={searchScreenStyles.modalSurahItem}
                 onPress={() => handleSurahSelect(item)}
               >
-                <Text style={styles.modalSurahNum}>{item.number}</Text>
-                <View style={styles.modalSurahTextContainer}>
-                  <Text style={styles.modalSurahName}>{item.name}</Text>
-                  <Text style={styles.modalSurahEnglish}>{item.englishName}</Text>
+                <Text style={searchScreenStyles.modalSurahNum}>{item.number}</Text>
+                <View style={searchScreenStyles.modalSurahTextContainer}>
+                  <Text style={searchScreenStyles.modalSurahName}>{item.name}</Text>
+                  <Text style={searchScreenStyles.modalSurahEnglish}>{item.englishName}</Text>
                 </View>
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={true}
-            style={styles.modalSurahList}
+            style={searchScreenStyles.modalSurahList}
           />
         </View>
       </Modal>
@@ -472,19 +472,19 @@ export default function SearchScreen() {
         animationType="slide"
         onRequestClose={() => setShowAyahModal(false)}
       >
-        <View style={styles.modalOverlay} />
-        <View style={styles.selectionModal}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowAyahModal(false)} style={styles.modalBackBtn}>
+        <View style={searchScreenStyles.modalOverlay} />
+        <View style={searchScreenStyles.selectionModal}>
+          <View style={searchScreenStyles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowAyahModal(false)} style={searchScreenStyles.modalBackBtn}>
               <Ionicons name="arrow-back" size={22} color="#bfa76f" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>اختر رقم الآية {selectedSurahObj ? `(${selectedSurahObj.name})` : ''}</Text>
-            <TouchableOpacity onPress={() => setShowAyahModal(false)} style={styles.modalCloseBtn}>
+            <Text style={searchScreenStyles.modalTitle}>اختر رقم الآية {selectedSurahObj ? `(${selectedSurahObj.name})` : ''}</Text>
+            <TouchableOpacity onPress={() => setShowAyahModal(false)} style={searchScreenStyles.modalCloseBtn}>
               <Ionicons name="close" size={22} color="#bfa76f" />
             </TouchableOpacity>
           </View>
           <TextInput
-            style={styles.modalSearchInput}
+            style={searchScreenStyles.modalSearchInput}
             placeholder="بحث برقم أو نص الآية..."
             placeholderTextColor="#bfa76f"
             value={ayahModalSearch}
@@ -497,477 +497,20 @@ export default function SearchScreen() {
             keyExtractor={item => item.number.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.modalAyahItem}
+                style={searchScreenStyles.modalAyahItem}
                 onPress={() => handleAyahSelect(item.number)}
               >
-                <View style={styles.modalAyahRow}>
-                  <Text style={styles.modalAyahNum}>{item.number}</Text>
-                  <Text style={styles.modalAyahText}>{item.text}</Text>
+                <View style={searchScreenStyles.modalAyahRow}>
+                  <Text style={searchScreenStyles.modalAyahNum}>{item.number}</Text>
+                  <Text style={searchScreenStyles.modalAyahText}>{item.text}</Text>
                 </View>
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={true}
-            style={styles.modalAyahList}
+            style={searchScreenStyles.modalAyahList}
           />
         </View>
       </Modal>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fdf6ec',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingVertical: 20,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    minHeight: screenHeight - 100,
-  },
-  card: {
-    backgroundColor: 'rgba(255,249,239,0.98)',
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#e0cfa9',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#7c5c1e',
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    letterSpacing: 0.5,
-    flex: 1,
-  },
-  clearButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(191, 167, 111, 0.1)',
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f8ecd4',
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 20,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: '#7c5c1e',
-    shadowColor: '#7c5c1e',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  toggleButtonText: {
-    fontSize: 14,
-    color: '#7c5c1e',
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-  },
-  toggleButtonTextActive: {
-    color: '#ffffff',
-  },
-  fieldGroup: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    color: '#7c5c1e',
-    alignSelf: 'flex-end',
-    marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    fontWeight: '600',
-  },
-  input: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#e0cfa9',
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    paddingHorizontal: 16,
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  textInput: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#e0cfa9',
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#2c2c2c',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    textAlign: 'right',
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    minHeight: 50,
-  },
-  searchHint: {
-    fontSize: 12,
-    color: '#bfa76f',
-    textAlign: 'right',
-    marginTop: 6,
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    fontStyle: 'italic',
-  },
-  inputDisabled: {
-    backgroundColor: '#f8ecd4',
-    color: '#bfa76f',
-    borderColor: '#e0cfa9',
-    opacity: 0.7,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#7c5c1e',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-    marginVertical: 16,
-    shadowColor: '#7c5c1e',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-    minWidth: 140,
-  },
-  buttonDisabled: {
-    backgroundColor: '#bfa76f',
-    opacity: 0.6,
-  },
-  buttonIcon: {
-    marginLeft: 8,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff0f0',
-    borderColor: '#ffcccb',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 8,
-  },
-  error: {
-    color: '#b53a3a',
-    fontSize: 14,
-    textAlign: 'right',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    marginLeft: 8,
-    flex: 1,
-  },
-  resultsContainer: {
-    marginTop: 20,
-  },
-  resultsHeader: {
-    fontSize: 18,
-    color: '#7c5c1e',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-  },
-  moreResultsText: {
-    fontSize: 14,
-    color: '#bfa76f',
-    textAlign: 'center',
-    marginTop: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    fontStyle: 'italic',
-  },
-  resultCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#e0cfa9',
-    padding: 20,
-    marginTop: 20,
-    width: '100%',
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8ecd4',
-  },
-  resultSurah: {
-    fontSize: 16,
-    color: '#7c5c1e',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'right',
-  },
-  resultNumber: {
-    backgroundColor: '#7c5c1e',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginLeft: 12,
-  },
-  resultNumberText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  ayahContainer: {
-    backgroundColor: '#fdf6ec',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  resultAyah: {
-    fontSize: 20,
-    color: '#2c2c2c',
-    fontFamily: 'Uthmani',
-    textAlign: 'right',
-    lineHeight: 32,
-    letterSpacing: 0.5,
-  },
-  tafsirContainer: {
-    backgroundColor: '#f8ecd4',
-    borderRadius: 12,
-    padding: 12,
-  },
-  tafsirLabel: {
-    fontSize: 14,
-    color: '#7c5c1e',
-    fontWeight: 'bold',
-    marginBottom: 6,
-    textAlign: 'right',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-  },
-  resultTafsir: {
-    fontSize: 14,
-    color: '#5d4a1a',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    textAlign: 'right',
-    lineHeight: 22,
-  },
-  shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginTop: 18,
-    backgroundColor: '#f8ecd4',
-    borderRadius: 18,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderWidth: 1.5,
-    borderColor: '#bfa76f',
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  shareButtonText: {
-    color: '#7c5c1e',
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
-  },
-  selectionModal: {
-    position: 'absolute',
-    top: 60,
-    left: 18,
-    right: 18,
-    bottom: 40,
-    backgroundColor: '#fff9ef',
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#e0cfa9',
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 20,
-    padding: 0,
-    zIndex: 2000,
-    overflow: 'hidden',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8ecd4',
-    backgroundColor: 'transparent',
-  },
-  modalTitle: {
-    fontSize: 20,
-    color: '#7c5c1e',
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    flex: 1,
-    textAlign: 'center',
-  },
-  modalCloseBtn: {
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: 'rgba(191, 167, 111, 0.08)',
-  },
-  modalBackBtn: {
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: 'rgba(191, 167, 111, 0.08)',
-    marginRight: 8,
-  },
-  modalSearchInput: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#e0cfa9',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#2c2c2c',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    textAlign: 'right',
-    margin: 18,
-    marginBottom: 0,
-  },
-  modalSurahList: {
-    flex: 1,
-    marginTop: 8,
-  },
-  modalSurahItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8ecd4',
-  },
-  modalSurahNum: {
-    fontSize: 15,
-    color: '#fff',
-    backgroundColor: '#bfa76f',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    minWidth: 32,
-    textAlign: 'center',
-    marginLeft: 12,
-    fontWeight: 'bold',
-  },
-  modalSurahTextContainer: {
-    flex: 1,
-  },
-  modalSurahName: {
-    fontSize: 16,
-    color: '#2c2c2c',
-    textAlign: 'right',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    fontWeight: '600',
-  },
-  modalSurahEnglish: {
-    fontSize: 13,
-    color: '#7c5c1e',
-    textAlign: 'right',
-    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
-    opacity: 0.8,
-    marginTop: 2,
-  },
-  modalAyahList: {
-    flex: 1,
-    marginTop: 8,
-  },
-  modalAyahItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8ecd4',
-    alignItems: 'flex-end',
-  },
-  modalAyahRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-  },
-  modalAyahNum: {
-    fontSize: 16,
-    color: '#fff',
-    backgroundColor: '#bfa76f',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    minWidth: 32,
-    textAlign: 'center',
-    marginLeft: 12,
-    fontWeight: 'bold',
-  },
-  modalAyahText: {
-    fontSize: 18,
-    color: '#2c2c2c',
-    fontFamily: 'Uthmani',
-    textAlign: 'right',
-    flex: 1,
-    lineHeight: 32,
-  },
-});
