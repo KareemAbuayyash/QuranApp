@@ -1,22 +1,49 @@
 // screens/HomeScreen.js
-import React from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, StyleSheet, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen({ navigation }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1200,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.backgroundDecor} />
+      <LinearGradient
+        colors={["#fdf6ec", "#f8ecd4", "#e0cfa9"]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <View style={styles.card}>
-        <Image source={require('../assets/quran.png')} style={styles.logo} />
-        <Text style={styles.headline}>مرحبًا بك في تطبيق القرآن</Text>
+        <View style={styles.logoGlowContainer}>
+          <View style={styles.logoGlow} />
+          <Image source={require('../assets/quran.png')} style={styles.logo} />
+        </View>
+        <Animated.Text style={[styles.headline, { opacity: fadeAnim }]}>مرحبًا بك في تطبيق القرآن</Animated.Text>
         <Text style={styles.subtitle}>استكشف السور وابحث عن الآيات وتفسيرها بسهولة</Text>
-        <View style={styles.divider} />
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SurahList')}>
+        <View style={styles.decorativeDividerContainer}>
+          <View style={styles.decorativeDivider} />
+          <Text style={styles.dividerIcon}>★</Text>
+          <View style={styles.decorativeDivider} />
+        </View>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SurahList')} activeOpacity={0.85}>
+          <Text style={styles.buttonIcon}>📖</Text>
           <Text style={styles.buttonText}>الفهرس</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SearchScreen')}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SearchScreen')} activeOpacity={0.85}>
+          <Text style={styles.buttonIcon}>🔍</Text>
           <Text style={styles.buttonText}>البحث عن آية وتفسيرها</Text>
         </TouchableOpacity>
+        <Text style={styles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
       </View>
     </SafeAreaView>
   );
@@ -25,45 +52,55 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fdf6ec',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backgroundDecor: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#fdf6ec',
+    backgroundColor: 'transparent',
   },
   card: {
-    backgroundColor: '#fff9ef',
-    borderRadius: 28,
-    borderWidth: 2.5,
+    backgroundColor: 'rgba(255,249,239,0.98)',
+    borderRadius: 32,
+    borderWidth: 3,
     borderColor: '#bfa76f',
     paddingVertical: 38,
     paddingHorizontal: 28,
     alignItems: 'center',
     shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 12,
     marginHorizontal: 18,
+    marginTop: 30,
+  },
+  logoGlowContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  logoGlow: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#e0cfa9',
+    opacity: 0.45,
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 10,
   },
   logo: {
     width: 120,
     height: 120,
-    marginBottom: 18,
     borderRadius: 32,
     borderWidth: 2,
     borderColor: '#bfa76f',
     backgroundColor: '#f8ecd4',
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 8,
+    zIndex: 2,
   },
   headline: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#7c5c1e',
     marginBottom: 8,
@@ -82,19 +119,34 @@ const styles = StyleSheet.create({
     fontFamily: 'Cochin',
     opacity: 0.95,
   },
-  divider: {
-    width: 90,
-    height: 3,
+  decorativeDividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+    marginTop: 2,
+  },
+  decorativeDivider: {
+    flex: 1,
+    height: 2.5,
     backgroundColor: '#bfa76f',
     borderRadius: 2,
-    marginBottom: 30,
+    marginHorizontal: 8,
+    opacity: 0.8,
+  },
+  dividerIcon: {
+    fontSize: 18,
+    color: '#bfa76f',
+    marginHorizontal: 2,
+    marginTop: -2,
   },
   button: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#7c5c1e',
     borderColor: '#bfa76f',
     borderWidth: 2,
     paddingVertical: 14,
-    paddingHorizontal: 44,
+    paddingHorizontal: 36,
     borderRadius: 30,
     marginVertical: 10,
     shadowColor: '#bfa76f',
@@ -102,7 +154,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 6,
     elevation: 4,
-    alignItems: 'center',
+    minWidth: 220,
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    fontSize: 22,
+    marginRight: 10,
+    color: '#e0cfa9',
+    marginTop: 1,
   },
   buttonText: {
     color: '#fff9ef',
@@ -110,5 +169,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 1,
     fontFamily: 'Cochin',
+  },
+  footer: {
+    marginTop: 28,
+    fontSize: 13,
+    color: '#bfa76f',
+    opacity: 0.7,
+    fontFamily: 'Cochin',
+    textAlign: 'center',
   },
 });
