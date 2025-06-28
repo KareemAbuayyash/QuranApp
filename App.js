@@ -45,7 +45,7 @@ export default function App() {
         <Stack.Screen
           name="SearchScreen"
           component={SearchScreen}
-          options={{ title: 'بحث عن آية' }}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
