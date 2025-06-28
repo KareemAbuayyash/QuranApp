@@ -29,6 +29,7 @@ const surahListStyles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 3,
+    maxWidth: '100%',
   },
   fullWidthBackButton: {
     position: 'absolute',
@@ -51,16 +52,19 @@ const surahListStyles = StyleSheet.create({
     textAlign: 'center',
   },
   listContent: {
-    paddingHorizontal: 10,
-    paddingBottom: 20,
+    paddingHorizontal: '3%',
+    paddingBottom: 30,
+    paddingTop: 10,
+    flexGrow: 1,
   },
   surahCard: {
     backgroundColor: '#fff9ef',
     borderRadius: 18,
     borderWidth: 2,
     borderColor: '#e0cfa9',
-    padding: 20,
-    marginHorizontal: 6,
+    paddingVertical: 18,
+    paddingHorizontal: '5%',
+    marginHorizontal: 0,
     marginBottom: 14,
     shadowColor: '#bfa76f',
     shadowOffset: { width: 0, height: 6 },
@@ -68,6 +72,9 @@ const surahListStyles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
     position: 'relative',
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
   },
   surahCardLoading: {
     opacity: 0.7,
@@ -76,6 +83,7 @@ const surahListStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   englishName: {
     fontSize: 16,
@@ -85,6 +93,7 @@ const surahListStyles = StyleSheet.create({
     flex: 1,
     textAlign: 'left',
     fontFamily: 'Cochin',
+    minWidth: 120,
   },
   arabicName: {
     fontSize: 20,
@@ -94,6 +103,7 @@ const surahListStyles = StyleSheet.create({
     letterSpacing: 1,
     flex: 1,
     textAlign: 'right',
+    minWidth: 120,
   },
   backArrow: {
     fontSize: 24,
