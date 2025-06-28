@@ -1,10 +1,11 @@
 // screens/HomeScreen.js
-import React, { useRef, useEffect } from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, StyleSheet, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -14,6 +15,14 @@ export default function HomeScreen({ navigation }) {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  const handleNavigate = (screen) => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      navigation.navigate(screen);
+    }, 1000);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -35,15 +44,21 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.dividerIcon}>★</Text>
           <View style={styles.decorativeDivider} />
         </View>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SurahList')} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.button} onPress={() => handleNavigate('SurahList')} activeOpacity={0.85} disabled={loading}>
           <Text style={styles.buttonIcon}>📖</Text>
           <Text style={styles.buttonText}>الفهرس</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SearchScreen')} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.button} onPress={() => handleNavigate('SearchScreen')} activeOpacity={0.85} disabled={loading}>
           <Text style={styles.buttonIcon}>🔍</Text>
           <Text style={styles.buttonText}>البحث عن آية وتفسيرها</Text>
         </TouchableOpacity>
         <Text style={styles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#bfa76f" />
+            <Text style={styles.loadingText}>جاري التحميل...</Text>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -177,5 +192,25 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     fontFamily: 'Cochin',
     textAlign: 'center',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(248, 236, 212, 0.85)',
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    flexDirection: 'row',
+  },
+  loadingText: {
+    marginLeft: 12,
+    fontSize: 18,
+    color: '#7c5c1e',
+    fontFamily: 'Cochin',
+    fontWeight: 'bold',
   },
 });
