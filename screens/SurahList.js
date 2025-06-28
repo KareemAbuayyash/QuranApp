@@ -1,7 +1,8 @@
 // screens/SurahList.js
 import React, { useLayoutEffect, useState, useMemo, useRef } from 'react';
-import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput, ActivityIndicator, Animated } from 'react-native';
+import { FlatList, TouchableOpacity, Text, StyleSheet, View, SafeAreaView, TextInput, ActivityIndicator, Animated, Dimensions, ScrollView } from 'react-native';
 import surahList from '../assets/quran/surah-list.json';
+import surahs from '../assets/quran/surahs';
 
 export default function SurahList({ navigation }) {
   useLayoutEffect(() => {
@@ -14,6 +15,11 @@ export default function SurahList({ navigation }) {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const flatListRef = useRef(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [mode, setMode] = useState('surah'); // 'surah' or 'tafsir'
+  const [selectedTafsirSurah, setSelectedTafsirSurah] = useState(null);
+  const [tafsirPage, setTafsirPage] = useState(0);
+  const AYAHS_PER_PAGE = 15;
+  const { width } = Dimensions.get('window');
 
   const filteredSurahs = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -55,6 +61,11 @@ export default function SurahList({ navigation }) {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
+  // For tafsir pagination
+  const tafsirAyahs = selectedTafsirSurah ? surahs[selectedTafsirSurah]?.ayahs || [] : [];
+  const tafsirTotalPages = Math.ceil(tafsirAyahs.length / AYAHS_PER_PAGE);
+  const tafsirPageAyahs = tafsirAyahs.slice(tafsirPage * AYAHS_PER_PAGE, (tafsirPage + 1) * AYAHS_PER_PAGE);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.pageBackground}>
@@ -63,48 +74,145 @@ export default function SurahList({ navigation }) {
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
           <View style={styles.fullWidthSurahNameContainer}>
-            <Text style={styles.surahNameHeader}>سور القراَن</Text>
+            {mode === 'tafsir' && selectedTafsirSurah ? (
+              <Text style={styles.surahNameHeader}>
+                تفسير {surahs[selectedTafsirSurah]?.name || ''}
+              </Text>
+            ) : (
+              <Text style={styles.surahNameHeader}>سور القراَن</Text>
+            )}
           </View>
         </View>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="بحث عن سورة..."
-          placeholderTextColor="#bfa76f"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <FlatList
-          ref={flatListRef}
-          data={filteredSurahs}
-          contentContainerStyle={styles.listContent}
-          keyExtractor={item => item.number.toString()}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          renderItem={({ item }) => (
+        {/* Mode Switch Buttons (hide when viewing tafsir of a surah) */}
+        {!(mode === 'tafsir' && selectedTafsirSurah) && (
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12 }}>
             <TouchableOpacity
-              style={[
-                styles.surahCard,
-                selectedSurah === item.number && styles.surahCardLoading
-              ]}
-              activeOpacity={0.85}
-              onPress={() => handleSurahPress(item)}
-              disabled={loading}
+              style={[styles.modeButton, mode === 'surah' && styles.modeButtonActive]}
+              onPress={() => { setMode('surah'); setSelectedTafsirSurah(null); setTafsirPage(0); }}
             >
-              <View style={styles.cardRow}>
-                <Text style={styles.englishName}>{item.englishName} — {item.numberOfAyahs} آية</Text>
-                <Text style={styles.arabicName}>{item.number}. {item.name}</Text>
-              </View>
-              {selectedSurah === item.number && loading && (
-                <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="small" color="#7c5c1e" />
-                  <Text style={styles.loadingText}>جاري التحميل...</Text>
-                </View>
-              )}
+              <Text style={[styles.modeButtonText, mode === 'surah' && styles.modeButtonTextActive]}>سورة</Text>
             </TouchableOpacity>
-          )}
-        />
-        
-        {showScrollToTop && (
+            <TouchableOpacity
+              style={[styles.modeButton, mode === 'tafsir' && styles.modeButtonActive]}
+              onPress={() => { setMode('tafsir'); setSelectedTafsirSurah(null); setTafsirPage(0); }}
+            >
+              <Text style={[styles.modeButtonText, mode === 'tafsir' && styles.modeButtonTextActive]}>تفسير</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Search Bar only in surah mode or tafsir surah list */}
+        {(mode === 'surah' || (mode === 'tafsir' && !selectedTafsirSurah)) && (
+          <TextInput
+            style={styles.searchBar}
+            placeholder="بحث عن سورة..."
+            placeholderTextColor="#bfa76f"
+            value={search}
+            onChangeText={setSearch}
+          />
+        )}
+        {/* Surah List (for both modes, but different onPress) */}
+        {mode === 'surah' && (
+          <FlatList
+            ref={flatListRef}
+            data={filteredSurahs}
+            contentContainerStyle={styles.listContent}
+            keyExtractor={item => item.number.toString()}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.surahCard,
+                  selectedSurah === item.number && styles.surahCardLoading
+                ]}
+                activeOpacity={0.85}
+                onPress={() => handleSurahPress(item)}
+                disabled={loading}
+              >
+                <View style={styles.cardRow}>
+                  <Text style={styles.englishName}>{item.englishName} — {item.numberOfAyahs} آية</Text>
+                  <Text style={styles.arabicName}>{item.number}. {item.name}</Text>
+                </View>
+                {selectedSurah === item.number && loading && (
+                  <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="small" color="#7c5c1e" />
+                    <Text style={styles.loadingText}>جاري التحميل...</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          />
+        )}
+        {mode === 'tafsir' && !selectedTafsirSurah && (
+          <FlatList
+            data={filteredSurahs}
+            contentContainerStyle={styles.listContent}
+            keyExtractor={item => item.number.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.surahCard}
+                activeOpacity={0.85}
+                onPress={() => { setSelectedTafsirSurah(item.number); setTafsirPage(0); }}
+              >
+                <View style={styles.cardRow}>
+                  <Text style={styles.englishName}>{item.englishName} — {item.numberOfAyahs} آية</Text>
+                  <Text style={styles.arabicName}>{item.number}. {item.name}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        )}
+        {/* Tafsir Ayah List with Pagination and SurahScreen Style */}
+        {mode === 'tafsir' && selectedTafsirSurah && (
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity
+              style={{ alignSelf: 'flex-end', margin: 12, padding: 8 }}
+              onPress={() => { setSelectedTafsirSurah(null); setTafsirPage(0); }}
+            >
+              <Text style={{ color: '#7c5c1e', fontSize: 18 }}>← رجوع</Text>
+            </TouchableOpacity>
+            <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.scrollContent, { paddingBottom: tafsirTotalPages > 1 ? 80 : 20 }]}> 
+              <View style={styles.ayahFrame}>
+                {tafsirPageAyahs.map((item, idx) => (
+                  <View key={item.number} style={{ marginBottom: 24 }}>
+                    <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginBottom: 6 }}>
+                      <Text style={[styles.ayahText, { textAlign: 'right', flex: 1 }]}>{item.text}</Text>
+                      <Text style={styles.ayahNumber}>{'{'}<Text style={styles.ayahNumberInner}>{item.number}</Text>{'} '}</Text>
+                    </View>
+                    {item.tafsir ? (
+                      <Text style={[styles.tafsirText, { textAlign: 'right', marginLeft: 16 }]}>تفسير: {item.tafsir}</Text>
+                    ) : (
+                      <Text style={[styles.tafsirTextEmpty, { textAlign: 'right' }]}>  لا يوجد تفسير متاح لهذه الآية.</Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+            {/* Pagination Controls */}
+            {tafsirTotalPages > 1 && (
+              <View style={styles.paginationContainer}>
+                <TouchableOpacity
+                  style={[styles.arrowButton, tafsirPage === tafsirTotalPages - 1 && styles.arrowButtonDisabled]}
+                  onPress={() => setTafsirPage(p => Math.min(p + 1, tafsirTotalPages - 1))}
+                  disabled={tafsirPage === tafsirTotalPages - 1}
+                >
+                  <Text style={[styles.arrowText, tafsirPage === tafsirTotalPages - 1 && styles.arrowTextDisabled]}>←</Text>
+                </TouchableOpacity>
+                <View style={styles.pageInfoContainer}>
+                  <Text style={styles.pageInfoText}>{tafsirPage + 1} من {tafsirTotalPages}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.arrowButton, tafsirPage === 0 && styles.arrowButtonDisabled]}
+                  onPress={() => setTafsirPage(p => Math.max(p - 1, 0))}
+                  disabled={tafsirPage === 0}
+                >
+                  <Text style={[styles.arrowText, tafsirPage === 0 && styles.arrowTextDisabled]}>→</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+        {showScrollToTop && mode === 'surah' && (
           <TouchableOpacity
             style={styles.scrollToTopButton}
             onPress={scrollToTop}
@@ -275,5 +383,141 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#fdf6ec',
     fontWeight: 'bold',
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 8,
+    backgroundColor: '#f8ecd4',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#bfa76f',
+    alignItems: 'center',
+  },
+  modeButtonActive: {
+    backgroundColor: '#bfa76f',
+  },
+  modeButtonText: {
+    fontSize: 18,
+    color: '#7c5c1e',
+    fontWeight: 'bold',
+  },
+  modeButtonTextActive: {
+    color: '#fff',
+  },
+  tafsirAyahCard: {
+    backgroundColor: '#fff9ef',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#e0cfa9',
+    padding: 16,
+    marginBottom: 12,
+    marginHorizontal: 6,
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  tafsirText: {
+    color: '#7c5c1e',
+    fontSize: 16,
+    marginTop: 8,
+    fontFamily: 'Cochin',
+  },
+  tafsirTextEmpty: {
+    color: '#bfa76f',
+    fontSize: 15,
+    marginTop: 8,
+    fontStyle: 'italic',
+    fontFamily: 'Cochin',
+  },
+  ayahText: {
+    color: '#2c2c2c',
+    fontSize: 24,
+    lineHeight: 40,
+    fontFamily: 'Uthmani',
+    textAlign: 'right',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  ayahFrame: {
+    backgroundColor: '#fff9ef',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#e0cfa9',
+    padding: 20,
+    marginHorizontal: 16,
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.13,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  ayahNumber: {
+    color: '#bfa76f',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  ayahNumberInner: {
+    fontSize: 18,
+  },
+  ayahSeparator: {
+    fontSize: 24,
+  },
+  paginationContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: '#fdf6ec',
+    borderTopWidth: 1,
+    borderTopColor: '#e0cfa9',
+  },
+  arrowButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f8ecd4',
+    borderColor: '#bfa76f',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  arrowButtonDisabled: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+  },
+  arrowText: {
+    color: '#7c5c1e',
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginTop: -13,
+  },
+  arrowTextDisabled: {
+    color: '#999',
+  },
+  pageInfoContainer: {
+    alignItems: 'center',
+  },
+  pageInfoText: {
+    color: '#7c5c1e',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Cochin',
   },
 });
