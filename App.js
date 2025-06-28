@@ -30,7 +30,7 @@ export default function App() {
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
-          options={{ title: 'الصفحة الرئيسية' }} 
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="SurahList"
