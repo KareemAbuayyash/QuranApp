@@ -5,30 +5,9 @@ import surahList from '../assets/quran/surah-list.json';
 import surah1 from '../assets/source/surah/surah_1.json';
 import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
-
-const audioFiles = {
-  "001": {
-    "001": require("../assets/source/audio/001/001.mp3"),
-    "002": require("../assets/source/audio/001/002.mp3"),
-    "003": require("../assets/source/audio/001/003.mp3"),
-    "004": require("../assets/source/audio/001/004.mp3"),
-    "005": require("../assets/source/audio/001/005.mp3"),
-    "006": require("../assets/source/audio/001/006.mp3"),
-    "007": require("../assets/source/audio/001/007.mp3"),
-  },
-  // Add more surahs as needed
-};
-
-const surahJsonFiles = {
-  "1": surah1,
-  // Add more surahs as needed
-};
-
-// Add a mapping for revelationType for demo
-const revelationTypeMap = {
-  '1': 'مكية', // الفاتحة
-  // Add more surahs as needed
-};
+import audioFiles from '../assets/source/audioFiles';
+import surahJsonFiles from '../assets/source/surahJsonFiles';
+import revelationTypeMap from '../assets/source/revelationTypeMap';
 
 export default function AudioSurahList({ navigation }) {
   const [selectedSurah, setSelectedSurah] = useState(null);
