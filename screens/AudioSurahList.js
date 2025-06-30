@@ -4,6 +4,7 @@ import { Audio } from 'expo-av';
 import surahList from '../assets/quran/surah-list.json';
 import surah1 from '../assets/source/surah/surah_1.json';
 import surahListStyles from '../styles/SurahListStyles';
+import styles from '../styles/AudioSurahListStyles';
 
 const audioFiles = {
   "001": {
@@ -162,73 +163,4 @@ export default function AudioSurahList({ navigation }) {
       </View>
     </SafeAreaView>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf6ec',
-    padding: 16,
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-    color: '#7c5c1e',
-  },
-  surahItem: {
-    padding: 14,
-    backgroundColor: '#fffbe6',
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e0cfa9',
-  },
-  surahName: {
-    fontSize: 18,
-    color: '#7c5c1e',
-    textAlign: 'right',
-  },
-  backButton: {
-    marginBottom: 12,
-    alignSelf: 'flex-start',
-    backgroundColor: '#e0cfa9',
-    padding: 8,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#7c5c1e',
-  },
-  ayahCount: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#bfa76f',
-    textAlign: 'center',
-  },
-  ayahBox: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e0cfa9',
-  },
-  ayahText: {
-    fontSize: 20,
-    color: '#222',
-    marginBottom: 8,
-    textAlign: 'right',
-  },
-  audioButton: {
-    backgroundColor: '#bfa76f',
-    padding: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  audioButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-}); 
+} 
