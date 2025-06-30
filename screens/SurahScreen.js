@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ScrollView, Text, View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
 import surahs from '../assets/quran/surahs';
+import surahScreenStyles from '../styles/SurahScreenStyles';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
@@ -28,7 +29,7 @@ export default function SurahScreen({ route, navigation }) {
   }, [surah]);
 
   if (!surah) {
-    return <Text style={styles.loading}>لم أجد بيانات السورة #{number}</Text>;
+    return <Text style={surahScreenStyles.loading}>لم أجد بيانات السورة #{number}</Text>;
   }
 
   const totalPages = pages.length;
@@ -55,47 +56,47 @@ export default function SurahScreen({ route, navigation }) {
   const currentAyahs = pages[currentPage] || [];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.pageBackground}>
+    <View style={surahScreenStyles.container}>
+      <View style={surahScreenStyles.pageBackground}>
         {/* Full-width Surah Banner with Back Arrow on Left */}
-        <View style={styles.fullWidthBanner}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.fullWidthBackButton}>
-            <Text style={styles.backArrow}>←</Text>
+        <View style={surahScreenStyles.fullWidthBanner}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={surahScreenStyles.fullWidthBackButton}>
+            <Text style={surahScreenStyles.backArrow}>←</Text>
           </TouchableOpacity>
-          <View style={styles.fullWidthSurahNameContainer}>
-            <Text style={styles.surahNameHeader}>{surah.name}</Text>
+          <View style={surahScreenStyles.fullWidthSurahNameContainer}>
+            <Text style={surahScreenStyles.surahNameHeader}>{surah.name}</Text>
           </View>
         </View>
         {/* Ayahs Content */}
         <ScrollView 
           ref={scrollViewRef}
-          style={styles.scrollContainer}
+          style={surahScreenStyles.scrollContainer}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
-            styles.scrollContent,
+            surahScreenStyles.scrollContent,
             { paddingBottom: showPagination ? 80 : 20 }
           ]}
         >
           {/* Basmala Image (scrolls with content) */}
           {currentPage === 0 && (
-            <View style={styles.basmalaContainer}>
-              <Image source={require('../assets/basmala.png')} style={styles.basmalaImage} resizeMode="contain" />
+            <View style={surahScreenStyles.basmalaContainer}>
+              <Image source={require('../assets/basmala.png')} style={surahScreenStyles.basmalaImage} resizeMode="contain" />
             </View>
           )}
-          <View style={styles.ayahFrame}>
-            <Text style={styles.paragraphText}>
+          <View style={surahScreenStyles.ayahFrame}>
+            <Text style={surahScreenStyles.paragraphText}>
               {currentAyahs.map((ayah, idx) => (
                 <React.Fragment key={ayah.number}>
-                  <Text style={styles.ayahText}>
+                  <Text style={surahScreenStyles.ayahText}>
                     {ayah.text}
                   </Text>
-                  <Text style={styles.ayahNumber}>
+                  <Text style={surahScreenStyles.ayahNumber}>
                     {' ﴿'}
-                    <Text style={styles.ayahNumberInner}>{ayah.number}</Text>
+                    <Text style={surahScreenStyles.ayahNumberInner}>{ayah.number}</Text>
                     {'﴾ '}
                   </Text>
                   {idx !== currentAyahs.length - 1 && (
-                    <Text style={styles.ayahSeparator}> </Text>
+                    <Text style={surahScreenStyles.ayahSeparator}> </Text>
                   )}
                 </React.Fragment>
               ))}
@@ -105,40 +106,40 @@ export default function SurahScreen({ route, navigation }) {
 
         {/* Pagination Controls */}
         {showPagination && (
-          <View style={styles.paginationContainer}>
+          <View style={surahScreenStyles.paginationContainer}>
             <TouchableOpacity
               style={[
-                styles.arrowButton,
-                currentPage === totalPages - 1 && styles.arrowButtonDisabled
+                surahScreenStyles.arrowButton,
+                currentPage === totalPages - 1 && surahScreenStyles.arrowButtonDisabled
               ]}
               onPress={goToNextPage}
               disabled={currentPage === totalPages - 1}
             >
               <Text style={[
-                styles.arrowText,
-                currentPage === totalPages - 1 && styles.arrowTextDisabled
+                surahScreenStyles.arrowText,
+                currentPage === totalPages - 1 && surahScreenStyles.arrowTextDisabled
               ]}>
                 ←
               </Text>
             </TouchableOpacity>
 
-            <View style={styles.pageInfoContainer}>
-              <Text style={styles.pageInfoText}>
+            <View style={surahScreenStyles.pageInfoContainer}>
+              <Text style={surahScreenStyles.pageInfoText}>
                 {currentPage + 1} من {totalPages}
               </Text>
             </View>
 
             <TouchableOpacity
               style={[
-                styles.arrowButton,
-                currentPage === 0 && styles.arrowButtonDisabled
+                surahScreenStyles.arrowButton,
+                currentPage === 0 && surahScreenStyles.arrowButtonDisabled
               ]}
               onPress={goToPrevPage}
               disabled={currentPage === 0}
             >
               <Text style={[
-                styles.arrowText,
-                currentPage === 0 && styles.arrowTextDisabled
+                surahScreenStyles.arrowText,
+                currentPage === 0 && surahScreenStyles.arrowTextDisabled
               ]}>
                 →
               </Text>
@@ -149,229 +150,3 @@ export default function SurahScreen({ route, navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loading: {
-    flex: 1,
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 18,
-    color: '#666',
-  },
-  pageBackground: {
-    flex: 1,
-    backgroundColor: '#fdf6ec',
-    paddingTop: 24,
-    paddingBottom: 12,
-  },
-  surahBanner: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8ecd4',
-    borderColor: '#bfa76f',
-    borderWidth: 2,
-    borderRadius: 12,
-    marginHorizontal: 24,
-    marginBottom: 18,
-    paddingVertical: 6,
-    paddingHorizontal: 24,
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  surahName: {
-    fontSize: 24,
-    color: '#7c5c1e',
-    fontWeight: 'bold',
-    fontFamily: 'Cochin',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  pageIndicator: {
-    fontSize: 14,
-    color: '#7c5c1e',
-    marginTop: 4,
-    opacity: 0.8,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  ayahFrame: {
-    backgroundColor: '#fff9ef',
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#e0cfa9',
-    padding: 20,
-    marginHorizontal: 16,
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.13,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  paragraphText: {
-    textAlign: 'right',
-    lineHeight: 40,
-    fontSize: 24,
-    fontFamily: 'Cochin',
-  },
-  ayahText: {
-    color: '#2c2c2c',
-    fontSize: 24,
-    lineHeight: 40,
-    fontFamily: 'Uthmani',
-  },
-  ayahNumber: {
-    color: '#bfa76f',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  ayahNumberInner: {
-    fontSize: 18,
-  },
-  ayahSeparator: {
-    fontSize: 24,
-  },
-  paginationContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: '#fdf6ec',
-    borderTopWidth: 1,
-    borderTopColor: '#e0cfa9',
-    
-  },
-  arrowButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f8ecd4',
-    borderColor: '#bfa76f',
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    
-  },
-  arrowButtonDisabled: {
-    backgroundColor: '#f0f0f0',
-    borderColor: '#ccc',
-  },
-  arrowText: {
-    color: '#7c5c1e',
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginTop: -13,
-  },
-  arrowTextDisabled: {
-    color: '#999',
-    
-  },
-  pageInfoContainer: {
-    alignItems: 'center',
-  },
-  pageInfoText: {
-    color: '#7c5c1e',
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'Cochin',
-  },
-  basmalaContainer: {
-    alignItems: 'center',
-    marginVertical: 18,
-  },
-  basmalaImage: {
-    width: '80%',
-    height: 40,
-    maxWidth: 400,
-  },
-  customHeader: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 30,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    // Removed - no longer needed
-  },
-  backArrow: {
-    fontSize: 24,
-    color: '#7c5c1e',
-    fontWeight: 'bold',
-    marginRight: 12,
-  },
-  surahBannerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8ecd4',
-    borderColor: '#bfa76f',
-    borderWidth: 2,
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  surahNameHeader: {
-    fontSize: 24,
-    color: '#7c5c1e',
-    fontWeight: 'bold',
-    fontFamily: 'Cochin',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  fullWidthBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8ecd4',
-    borderColor: '#bfa76f',
-    borderWidth: 2,
-    borderRadius: 16,
-    marginTop: 30,
-    marginBottom: 16,
-    marginStart: 10,
-    marginEnd: 10,
-    paddingVertical: 8,
-    shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  fullWidthBackButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 2,
-    padding: 8,
-    marginTop: -9,
-  },
-  fullWidthSurahNameContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
