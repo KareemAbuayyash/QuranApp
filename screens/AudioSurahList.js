@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, FlatList, StyleSheet, ScrollView, SafeAre
 import { Audio } from 'expo-av';
 import surahList from '../assets/quran/surah-list.json';
 import surah1 from '../assets/source/surah/surah_1.json';
-import audioSurahListStyles from '../styles/AudioSurahListStyles';
+import surahListStyles from '../styles/SurahListStyles';
 
 const audioFiles = {
   "001": {
@@ -85,22 +85,22 @@ export default function AudioSurahList({ navigation }) {
 
   if (!selectedSurah) {
     return (
-      <SafeAreaView style={audioSurahListStyles.safeArea}>
-        <View style={audioSurahListStyles.pageBackground}>
-          <View style={audioSurahListStyles.fullWidthBanner}>
-            <TouchableOpacity onPress={() => { if (typeof navigation !== 'undefined') navigation.goBack && navigation.goBack(); }} style={audioSurahListStyles.fullWidthBackButton}>
-              <Text style={audioSurahListStyles.backArrow}>←</Text>
+      <SafeAreaView style={surahListStyles.safeArea}>
+        <View style={surahListStyles.pageBackground}>
+          <View style={surahListStyles.fullWidthBanner}>
+            <TouchableOpacity onPress={() => { if (typeof navigation !== 'undefined') navigation.goBack && navigation.goBack(); }} style={surahListStyles.fullWidthBackButton}>
+              <Text style={surahListStyles.backArrow}>←</Text>
             </TouchableOpacity>
-            <View style={audioSurahListStyles.fullWidthSurahNameContainer}>
-              <Text style={[audioSurahListStyles.surahNameHeader, { fontFamily: 'Uthmani' }]}>سور مع الصوت</Text>
+            <View style={surahListStyles.fullWidthSurahNameContainer}>
+              <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'Uthmani' }]}>سور مع الصوت</Text>
             </View>
           </View>
           <FlatList
             data={surahList}
             keyExtractor={(item) => item.number.toString()}
-            contentContainerStyle={audioSurahListStyles.listContent}
+            contentContainerStyle={surahListStyles.listContent}
             renderItem={({ item }) => (
-              <TouchableOpacity style={audioSurahListStyles.surahItem} onPress={async () => {
+              <TouchableOpacity style={styles.surahItem} onPress={async () => {
                 const surahJson = surahJsonFiles[item.number.toString()];
                 if (!surahJson) {
                   alert('هذه السورة غير متوفرة في العرض التجريبي');
@@ -108,7 +108,7 @@ export default function AudioSurahList({ navigation }) {
                 }
                 handleSurahPress({ ...item, ...surahJson, index: item.number.toString().padStart(3, '0') });
               }}>
-                <Text style={audioSurahListStyles.surahName}>{item.number}. {item.name} ({item.englishName})</Text>
+                <Text style={styles.surahName}>{item.number}. {item.name} ({item.englishName})</Text>
                 <Text style={{ fontFamily: 'Uthmani', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
                   {revelationTypeMap[item.number?.toString()] ? `(${revelationTypeMap[item.number?.toString()]} )` : ''}
                 </Text>
@@ -121,10 +121,10 @@ export default function AudioSurahList({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={audioSurahListStyles.safeArea}>
-      <View style={audioSurahListStyles.pageBackground}>
-        <View style={audioSurahListStyles.fullWidthBanner}>
-          <TouchableOpacity style={audioSurahListStyles.fullWidthBackButton} onPress={async () => {
+    <SafeAreaView style={surahListStyles.safeArea}>
+      <View style={surahListStyles.pageBackground}>
+        <View style={surahListStyles.fullWidthBanner}>
+          <TouchableOpacity style={surahListStyles.fullWidthBackButton} onPress={async () => {
             setSelectedSurah(null);
             setPlayingAyah(null);
             if (sound) {
@@ -132,27 +132,27 @@ export default function AudioSurahList({ navigation }) {
               setSound(null);
             }
           }}>
-            <Text style={audioSurahListStyles.backArrow}>←</Text>
+            <Text style={surahListStyles.backArrow}>←</Text>
           </TouchableOpacity>
-          <View style={audioSurahListStyles.fullWidthSurahNameContainer}>
-            <Text style={[audioSurahListStyles.surahNameHeader, { fontFamily: 'Uthmani' }]}>سورة {selectedSurah.name}</Text>
+          <View style={surahListStyles.fullWidthSurahNameContainer}>
+            <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'Uthmani' }]}>سورة {selectedSurah.name}</Text>
             <Text style={{ fontFamily: 'Uthmani', fontSize: 18, color: '#7c5c1e', marginTop: 4 }}>
               {revelationTypeMap[selectedSurah.number?.toString()] ? `(${revelationTypeMap[selectedSurah.number?.toString()]} )` : ''}
             </Text>
           </View>
         </View>
-        <ScrollView style={audioSurahListStyles.container}>
-          <Text style={audioSurahListStyles.ayahCount}>عدد الآيات: {selectedSurah.count}</Text>
+        <ScrollView style={styles.container}>
+          <Text style={styles.ayahCount}>عدد الآيات: {selectedSurah.count}</Text>
           {Object.entries(selectedSurah.verse).map(([key, value], idx) => (
-            <View key={key} style={audioSurahListStyles.ayahBox}>
-              <Text style={[audioSurahListStyles.ayahText, { fontFamily: 'Uthmani' }]}>{value}</Text>
+            <View key={key} style={styles.ayahBox}>
+              <Text style={[styles.ayahText, { fontFamily: 'Uthmani' }]}>{value}</Text>
               <TouchableOpacity
-                style={audioSurahListStyles.audioButton}
+                style={styles.audioButton}
                 onPress={() =>
                   playingAyah === idx + 1 ? handleStopAudio() : handlePlayAudio(idx + 1)
                 }
               >
-                <Text style={audioSurahListStyles.audioButtonText}>
+                <Text style={styles.audioButtonText}>
                   {playingAyah === idx + 1 ? 'إيقاف الصوت' : 'تشغيل الصوت'}
                 </Text>
               </TouchableOpacity>
@@ -162,4 +162,73 @@ export default function AudioSurahList({ navigation }) {
       </View>
     </SafeAreaView>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fdf6ec',
+    padding: 16,
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#7c5c1e',
+  },
+  surahItem: {
+    padding: 14,
+    backgroundColor: '#fffbe6',
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e0cfa9',
+  },
+  surahName: {
+    fontSize: 18,
+    color: '#7c5c1e',
+    textAlign: 'right',
+  },
+  backButton: {
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    backgroundColor: '#e0cfa9',
+    padding: 8,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#7c5c1e',
+  },
+  ayahCount: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#bfa76f',
+    textAlign: 'center',
+  },
+  ayahBox: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0cfa9',
+  },
+  ayahText: {
+    fontSize: 20,
+    color: '#222',
+    marginBottom: 8,
+    textAlign: 'right',
+  },
+  audioButton: {
+    backgroundColor: '#bfa76f',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  audioButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+}); 
