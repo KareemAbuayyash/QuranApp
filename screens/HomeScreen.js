@@ -1,12 +1,17 @@
 // screens/HomeScreen.js
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing, ActivityIndicator } from 'react-native';
+import { View, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import homeScreenStyles from '../styles/HomeScreenStyles';
+import * as FileSystem from 'expo-file-system';
+import * as Asset from 'expo-asset';
 
 export default function HomeScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [loading, setLoading] = useState(false);
+  const [showSource, setShowSource] = useState(false);
+  const [surahData, setSurahData] = useState(null);
+  const [audioFiles, setAudioFiles] = useState([]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -23,6 +28,28 @@ export default function HomeScreen({ navigation }) {
       setLoading(false);
       navigation.navigate(screen);
     }, 1000);
+  };
+
+  const handleShowSource = async () => {
+    setShowSource((prev) => !prev);
+    if (!surahData) {
+      // Load surah JSON
+      try {
+        const surahJson = require('../assets/source/surah/surah_1.json');
+        setSurahData(surahJson);
+        // List audio files for surah 001
+        const audioDir = FileSystem.bundleDirectory + 'assets/source/audio/001/';
+        // For Expo, we can statically list them (since dynamic FS is limited)
+        setAudioFiles([
+          require('../assets/source/audio/001/001.mp3'),
+          require('../assets/source/audio/001/002.mp3'),
+          require('../assets/source/audio/001/003.mp3'),
+        ]);
+      } catch (e) {
+        setSurahData({ name: 'Error', verse: {}, count: 0 });
+        setAudioFiles([]);
+      }
+    }
   };
 
   return (
@@ -53,6 +80,24 @@ export default function HomeScreen({ navigation }) {
           <Text style={homeScreenStyles.buttonIcon}>🔍</Text>
           <Text style={homeScreenStyles.buttonText}>البحث عن آية وتفسيرها</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={homeScreenStyles.button} onPress={() => navigation.navigate('AudioSurahList')} activeOpacity={0.85}>
+          <Text style={homeScreenStyles.buttonIcon}>🎵</Text>
+          <Text style={homeScreenStyles.buttonText}>عرض السور والصوتيات</Text>
+        </TouchableOpacity>
+        {showSource && surahData && (
+          <View style={{ marginTop: 20, backgroundColor: '#fffbe6', borderRadius: 12, padding: 16 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>سورة: {surahData.name}</Text>
+            <Text style={{ marginBottom: 8 }}>عدد الآيات: {surahData.count}</Text>
+            <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>الآيات:</Text>
+            {Object.values(surahData.verse).map((v, i) => (
+              <Text key={i} style={{ fontSize: 16, marginBottom: 2 }}>{v}</Text>
+            ))}
+            <Text style={{ fontWeight: 'bold', marginTop: 10, marginBottom: 4 }}>ملفات الصوت:</Text>
+            {audioFiles.map((audio, i) => (
+              <Text key={i} style={{ fontSize: 15 }}>ملف {i + 1}</Text>
+            ))}
+          </View>
+        )}
         <Text style={homeScreenStyles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
         {loading && (
           <View style={homeScreenStyles.loadingOverlay}>
