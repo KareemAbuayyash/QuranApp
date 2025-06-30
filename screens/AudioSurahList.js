@@ -129,11 +129,11 @@ export default function AudioSurahList({ navigation }) {
               <TouchableOpacity
                 style={styles.audioButton}
                 onPress={() =>
-                  playingAyah === idx + 1 ? handleStopAudio() : handlePlayAudio(idx + 1)
+                  playingAyah === idx + 0 ? handleStopAudio() : handlePlayAudio(idx + 0)
                 }
               >
                 <Text style={styles.audioButtonText}>
-                  {playingAyah === idx + 1 ? 'إيقاف الصوت' : 'تشغيل الصوت'}
+                  {playingAyah === idx + 0 ? 'إيقاف الصوت' : 'تشغيل الصوت'}
                 </Text>
               </TouchableOpacity>
             </View>
