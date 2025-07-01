@@ -2,19 +2,20 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from './screens/HomeScreen';
-import SurahList from './screens/SurahList';
-import SurahScreen from './screens/SurahScreen';
-import SearchScreen from './screens/SearchScreen';
+import HomeScreen     from './screens/HomeScreen';
+import SurahList      from './screens/SurahList';
+import SurahScreen    from './screens/SurahScreen';
+import SearchScreen   from './screens/SearchScreen';
 import AudioSurahList from './screens/AudioSurahList';
-import { useFonts } from 'expo-font';
+import { useFonts }   from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    Uthmani: require('./assets/fonts/Uthmani.otf.otf'),
+    // قم بوضع ملف الخط الكامل هنا
+    UthmaniFull: require('./assets/fonts/KFGQPC-Uthmanic-Script-HAFS-Regular.ttf.ttf'),
   });
 
   if (!fontsLoaded) {
@@ -51,7 +52,7 @@ export default function App() {
         <Stack.Screen
           name="AudioSurahList"
           component={AudioSurahList}
-          options={{ headerShown: false  }}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
