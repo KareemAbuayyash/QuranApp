@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { Audio } from 'expo-av';
 import surahJsonFiles from '../assets/source/surahJsonFiles';
@@ -48,6 +48,16 @@ export default function SurahScreen({ route, navigation }) {
     }
     return pagesArray;
   }, [ayahs]);
+
+  useEffect(() => {
+    // Cleanup function to stop audio when leaving the screen
+    return () => {
+      if (sound) {
+        sound.stopAsync();
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
 
   if (!surah) {
     return <Text style={surahScreenStyles.loading}>لم أجد بيانات السورة #{number}</Text>;
