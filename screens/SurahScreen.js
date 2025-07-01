@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
-import surahs from '../assets/quran/surahs';
+import surahJsonFiles from '../assets/source/surahJsonFiles';
 import surahScreenStyles from '../styles/SurahScreenStyles';
 
 const { width } = Dimensions.get('window');
@@ -8,25 +8,38 @@ const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
 
 export default function SurahScreen({ route, navigation }) {
   const { number } = route.params;
-  const surah = surahs[number];
+  const surah = surahJsonFiles[number];
   const [currentPage, setCurrentPage] = useState(0);
   const scrollViewRef = useRef(null);
 
+  // Extract ayahs as an array from the 'verse' object
+  const ayahs = useMemo(() => {
+    if (!surah || !surah.verse) return [];
+    // Get keys like 'verse_1', 'verse_2', ... and sort numerically
+    return Object.keys(surah.verse)
+      .sort((a, b) => {
+        const numA = parseInt(a.replace('verse_', ''));
+        const numB = parseInt(b.replace('verse_', ''));
+        return numA - numB;
+      })
+      .map((key, idx) => ({
+        number: idx + 1,
+        text: surah.verse[key],
+      }));
+  }, [surah]);
+
   // Split ayahs into pages
   const pages = useMemo(() => {
-    if (!surah || !surah.ayahs) return [];
-    
-    const totalPages = Math.ceil(surah.ayahs.length / AYAHS_PER_PAGE);
+    if (!ayahs.length) return [];
+    const totalPages = Math.ceil(ayahs.length / AYAHS_PER_PAGE);
     const pagesArray = [];
-    
     for (let i = 0; i < totalPages; i++) {
       const startIndex = i * AYAHS_PER_PAGE;
-      const endIndex = Math.min(startIndex + AYAHS_PER_PAGE, surah.ayahs.length);
-      pagesArray.push(surah.ayahs.slice(startIndex, endIndex));
+      const endIndex = Math.min(startIndex + AYAHS_PER_PAGE, ayahs.length);
+      pagesArray.push(ayahs.slice(startIndex, endIndex));
     }
-    
     return pagesArray;
-  }, [surah]);
+  }, [ayahs]);
 
   if (!surah) {
     return <Text style={surahScreenStyles.loading}>لم أجد بيانات السورة #{number}</Text>;

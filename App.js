@@ -37,7 +37,7 @@ export default function App() {
         <Stack.Screen
           name="SurahList"
           component={SurahList}
-          options={{ title: 'سور القرآن' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="SurahScreen"

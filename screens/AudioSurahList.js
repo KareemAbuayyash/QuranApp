@@ -19,20 +19,10 @@ import surahJsonFiles  from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import { MaterialIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
+import normalizeArabic from '../components/normalizeArabic';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15;
-
-// Helper to normalize Arabic for search (ignore أ vs ا)
-const normalizeArabic = (text) =>
-  text
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/ة/g, 'ه')
-    .replace(/[ى]/g, 'ي')
-    .replace(/[ًٌٍَُِّْ]/g, '') // Remove harakat/diacritics
-    .replace(/ء/g, '') // Optionally remove hamza
-    .replace(/-/g, '') // Remove dashes
-    .replace(/\s+/g, ''); // Remove extra spaces
 
 export default function AudioSurahList({ navigation }) {
   const [selectedSurah, setSelectedSurah] = useState(null);
