@@ -1,5 +1,5 @@
 // screens/AudioSurahList.js
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -31,7 +31,6 @@ export default function AudioSurahList({ navigation }) {
   const [lastPositions, setLastPositions] = useState({}); // ayahIndex: positionMillis
   const [playbackStatus, setPlaybackStatus] = useState({}); // ayahIndex: { positionMillis, durationMillis }
   const [timer, setTimer] = useState(0);
-  const [audioDurations, setAudioDurations] = useState({}); // ayahIndex: durationSec
 
   // تقسيم الآيات إلى صفحات
   const pages = useMemo(() => {
@@ -47,44 +46,12 @@ export default function AudioSurahList({ navigation }) {
     return pagesArray;
   }, [selectedSurah]);
 
-  // Preload audio durations for ayahs on the current page
-  useEffect(() => {
-    if (!selectedSurah || !pages.length) return;
-    const ayahs = pages[currentPage] || [];
-    let isMounted = true;
-    (async () => {
-      const newDurations = {};
-      for (let idx = 0; idx < ayahs.length; idx++) {
-        const [key] = ayahs[idx];
-        const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
-        const surahIndex = selectedSurah.index;
-        const audioKey = ayahIndex.toString().padStart(3, '0');
-        const source = audioFiles[surahIndex]?.[audioKey];
-        if (source && audioDurations[ayahIndex] == null) {
-          try {
-            const { sound, status } = await Audio.Sound.createAsync(source, { shouldPlay: false });
-            if (status.isLoaded && isMounted) {
-              newDurations[ayahIndex] = Math.floor((status.durationMillis || 0) / 1000);
-            }
-            await sound.unloadAsync();
-          } catch (e) {
-            // ignore
-          }
-        } else if (audioDurations[ayahIndex] != null) {
-          newDurations[ayahIndex] = audioDurations[ayahIndex];
-        }
-      }
-      if (isMounted && Object.keys(newDurations).length > 0) {
-        setAudioDurations(prev => ({ ...prev, ...newDurations }));
-      }
-    })();
-    return () => { isMounted = false; };
-  }, [selectedSurah, currentPage]);
-
   const handleSurahPress = async (surah) => {
     setSelectedSurah(surah);
     setPlayingAyah(null);
     setCurrentPage(0);
+    setLastPositions({}); // Reset all saved positions
+    setPlaybackStatus({}); // Reset playback status
     if (sound) {
       await sound.unloadAsync();
       setSound(null);
@@ -281,7 +248,7 @@ export default function AudioSurahList({ navigation }) {
             const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
             const elapsed = playingAyah === ayahIndex ? timer : Math.floor((lastPositions[ayahIndex] || 0) / 1000);
             const status = playbackStatus[ayahIndex] || {};
-            const durationSec = audioDurations[ayahIndex] != null ? audioDurations[ayahIndex] : (status.durationMillis ? Math.floor(status.durationMillis / 1000) : 0);
+            const durationSec = status.durationMillis ? Math.floor(status.durationMillis / 1000) : 0;
             const positionSec = status.positionMillis ? Math.floor(status.positionMillis / 1000) : elapsed;
             const progress = durationSec > 0 ? positionSec / durationSec : 0;
             const sliderWidth = '100%';
