@@ -16,6 +16,7 @@ import styles          from '../styles/AudioSurahListStyles';
 import audioFiles      from '../assets/source/audioFiles';
 import surahJsonFiles  from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15;
@@ -26,6 +27,9 @@ export default function AudioSurahList({ navigation }) {
   const [sound, setSound]                 = useState(null);
   const [currentPage, setCurrentPage]     = useState(0);
   const scrollViewRef                     = useRef(null);
+  const [lastPositions, setLastPositions] = useState({}); // ayahIndex: positionMillis
+  const [playbackStatus, setPlaybackStatus] = useState({}); // ayahIndex: { positionMillis, durationMillis }
+  const [timer, setTimer] = useState(0);
 
   // تقسيم الآيات إلى صفحات
   const pages = useMemo(() => {
@@ -56,7 +60,8 @@ export default function AudioSurahList({ navigation }) {
       await sound.unloadAsync();
       setSound(null);
       setPlayingAyah(null);
-      if (playingAyah === ayahNum) return; // إذا ضغط مرة ثانية على نفس الآية
+      setTimer(0);
+      if (playingAyah === ayahNum) return;
     }
     const surahIndex = selectedSurah.index;
     const key        = ayahNum.toString().padStart(3, '0');
@@ -66,14 +71,24 @@ export default function AudioSurahList({ navigation }) {
       return;
     }
     try {
-      const { sound: newSound } = await Audio.Sound.createAsync(source);
+      const { sound: newSound, status } = await Audio.Sound.createAsync(source, { shouldPlay: true });
       setSound(newSound);
       setPlayingAyah(ayahNum);
-      await newSound.playAsync();
+      let startMillis = lastPositions[ayahNum] || 0;
+      if (startMillis > 0) {
+        await newSound.setPositionAsync(startMillis);
+      }
+      setTimer(Math.floor((startMillis || 0) / 1000));
       newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          setPlayingAyah(null);
-          setSound(null);
+        if (status.isLoaded) {
+          setPlaybackStatus((prev) => ({ ...prev, [ayahNum]: { positionMillis: status.positionMillis, durationMillis: status.durationMillis } }));
+          setTimer(Math.floor((status.positionMillis || 0) / 1000));
+          if (status.didJustFinish) {
+            setPlayingAyah(null);
+            setSound(null);
+            setTimer(0);
+            setLastPositions((prev) => ({ ...prev, [ayahNum]: 0 }));
+          }
         }
       });
     } catch (e) {
@@ -82,12 +97,32 @@ export default function AudioSurahList({ navigation }) {
   };
 
   const handleStopAudio = async () => {
+    if (sound && playingAyah !== null) {
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded) {
+        setLastPositions((prev) => ({ ...prev, [playingAyah]: status.positionMillis }));
+      }
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(null);
+      setPlayingAyah(null);
+      setTimer(0);
+    }
+  };
+
+  const handleRestartAudio = async (ayahNum) => {
+    // Stop current audio if playing
     if (sound) {
       await sound.stopAsync();
       await sound.unloadAsync();
       setSound(null);
       setPlayingAyah(null);
+      setTimer(0);
     }
+    // Reset saved position for this ayah
+    setLastPositions((prev) => ({ ...prev, [ayahNum]: 0 }));
+    // Start playback from beginning
+    await handlePlayAudio(ayahNum);
   };
 
   const goToNextPage = () => {
@@ -208,23 +243,37 @@ export default function AudioSurahList({ navigation }) {
 
           {currentAyahs.map(([key, value], idx) => {
             const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
+            const elapsed = playingAyah === ayahIndex ? timer : Math.floor((lastPositions[ayahIndex] || 0) / 1000);
             return (
               <View key={key} style={styles.ayahBox}>
                 <Text style={[styles.ayahText, { fontFamily: 'UthmaniFull' }]}>
                   {value}
                 </Text>
-                <TouchableOpacity
-                  style={styles.audioButton}
-                  onPress={() =>
-                    playingAyah === ayahIndex
-                      ? handleStopAudio()
-                      : handlePlayAudio(ayahIndex)
-                  }
-                >
-                  <Text style={styles.audioButtonText}>
-                    {playingAyah === ayahIndex ? 'إيقاف الصوت' : 'تشغيل الصوت'}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity
+                    style={styles.audioButton}
+                    onPress={() =>
+                      playingAyah === ayahIndex
+                        ? handleStopAudio()
+                        : handlePlayAudio(ayahIndex)
+                    }
+                  >
+                    <MaterialIcons
+                      name={playingAyah === ayahIndex ? 'stop' : 'play-arrow'}
+                      size={24}
+                      color="#bfa76f"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.audioButton, { marginLeft: 6, backgroundColor: '#e0cfa9', paddingHorizontal: 10 }]}
+                    onPress={() => handleRestartAudio(ayahIndex)}
+                  >
+                    <MaterialIcons name="replay" size={24} color="#7c5c1e" />
+                  </TouchableOpacity>
+                  <Text style={{ marginLeft: 10, fontSize: 16, color: '#7c5c1e', fontFamily: 'UthmaniFull' }}>
+                    {elapsed}s
                   </Text>
-                </TouchableOpacity>
+                </View>
               </View>
             );
           })}
