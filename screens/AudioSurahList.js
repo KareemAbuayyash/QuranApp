@@ -8,6 +8,7 @@ import {
   ScrollView,
   SafeAreaView,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import surahList       from '../assets/quran/surah-list.json';
@@ -31,6 +32,7 @@ export default function AudioSurahList({ navigation }) {
   const [lastPositions, setLastPositions] = useState({}); // ayahIndex: positionMillis
   const [playbackStatus, setPlaybackStatus] = useState({}); // ayahIndex: { positionMillis, durationMillis }
   const [timer, setTimer] = useState(0);
+  const [searchText, setSearchText] = useState('');
 
   // تقسيم الآيات إلى صفحات
   const pages = useMemo(() => {
@@ -148,6 +150,16 @@ export default function AudioSurahList({ navigation }) {
 
   // إذا لم يتم اختيار سورة بعد
   if (!selectedSurah) {
+    // Filter surah list by search text
+    const filteredSurahList = surahList.filter(item => {
+      const text = searchText.trim().toLowerCase();
+      if (!text) return true;
+      return (
+        item.name.toLowerCase().includes(text) ||
+        item.englishName.toLowerCase().includes(text) ||
+        item.number.toString().includes(text)
+      );
+    });
     return (
       <SafeAreaView style={surahListStyles.safeArea}>
         <View style={surahListStyles.pageBackground}>
@@ -159,13 +171,20 @@ export default function AudioSurahList({ navigation }) {
               <Text style={surahListStyles.backArrow}>←</Text>
             </TouchableOpacity>
             <View style={surahListStyles.fullWidthSurahNameContainer}>
-              <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>
-                سور مع الصوت
-              </Text>
+              <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سور مع الصوت</Text>
             </View>
           </View>
+          <TextInput
+            style={surahListStyles.searchBar}
+            placeholder="ابحث باسم السورة أو رقمها أو بالإنجليزي..."
+            placeholderTextColor="#bfa76f"
+            value={searchText}
+            onChangeText={setSearchText}
+            clearButtonMode="while-editing"
+            textAlign="right"
+          />
           <FlatList
-            data={surahList}
+            data={filteredSurahList}
             keyExtractor={item => item.number.toString()}
             contentContainerStyle={surahListStyles.listContent}
             renderItem={({ item }) => (
@@ -180,9 +199,7 @@ export default function AudioSurahList({ navigation }) {
                   handleSurahPress({ ...item, ...json, index: item.number.toString().padStart(3, '0') });
                 }}
               >
-                <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}>
-                  {item.number}. {item.name} ({item.englishName})
-                </Text>
+                <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {item.number}. {item.name} ({item.englishName}) </Text>
                 <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
                   {revelationTypeMap[item.number.toString()] 
                     ? `(${revelationTypeMap[item.number.toString()]})` 
