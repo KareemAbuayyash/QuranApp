@@ -165,6 +165,7 @@ const surahScreenStyles = StyleSheet.create({
     color: '#7c5c1e',
     fontWeight: 'bold',
     marginRight: 12,
+    marginTop: -6,
   },
   surahBannerHeader: {
     flexDirection: 'row',
