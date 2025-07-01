@@ -161,11 +161,11 @@ const surahScreenStyles = StyleSheet.create({
     // Removed - no longer needed
   },
   backArrow: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#7c5c1e',
     fontWeight: 'bold',
     marginRight: 12,
-    marginTop: -6,
+    marginTop: -9,
   },
   surahBannerHeader: {
     flexDirection: 'row',
