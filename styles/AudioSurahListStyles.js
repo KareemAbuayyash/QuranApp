@@ -47,18 +47,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontWeight: 'bold',
   },
-  ayahBox: {
+  ayahCard: {
     backgroundColor: '#fff9ef',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1.5,
     borderColor: '#e0cfa9',
     shadowColor: '#bfa76f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   ayahText: {
     fontSize: 20,
@@ -69,11 +69,15 @@ const styles = StyleSheet.create({
   },
   audioButton: {
     backgroundColor: '#f8ecd4',
-    padding: 10,
+    padding: 8,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#bfa76f',
+    marginRight: 4,
+    minWidth: 36,
+    minHeight: 36,
+    justifyContent: 'center',
   },
   audioButtonText: {
     color: '#7c5c1e',
@@ -131,6 +135,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: 'Cochin',
+  },
+  slider: {
+    width: '100%',
+    height: 32,
+    alignSelf: 'center',
+    marginTop: 2,
+    marginBottom: 2,
   },
 });
 

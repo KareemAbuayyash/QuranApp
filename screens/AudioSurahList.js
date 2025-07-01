@@ -1,5 +1,5 @@
 // screens/AudioSurahList.js
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import audioFiles      from '../assets/source/audioFiles';
 import surahJsonFiles  from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import { MaterialIcons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15;
@@ -30,6 +31,7 @@ export default function AudioSurahList({ navigation }) {
   const [lastPositions, setLastPositions] = useState({}); // ayahIndex: positionMillis
   const [playbackStatus, setPlaybackStatus] = useState({}); // ayahIndex: { positionMillis, durationMillis }
   const [timer, setTimer] = useState(0);
+  const [audioDurations, setAudioDurations] = useState({}); // ayahIndex: durationSec
 
   // تقسيم الآيات إلى صفحات
   const pages = useMemo(() => {
@@ -44,6 +46,40 @@ export default function AudioSurahList({ navigation }) {
     }
     return pagesArray;
   }, [selectedSurah]);
+
+  // Preload audio durations for ayahs on the current page
+  useEffect(() => {
+    if (!selectedSurah || !pages.length) return;
+    const ayahs = pages[currentPage] || [];
+    let isMounted = true;
+    (async () => {
+      const newDurations = {};
+      for (let idx = 0; idx < ayahs.length; idx++) {
+        const [key] = ayahs[idx];
+        const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
+        const surahIndex = selectedSurah.index;
+        const audioKey = ayahIndex.toString().padStart(3, '0');
+        const source = audioFiles[surahIndex]?.[audioKey];
+        if (source && audioDurations[ayahIndex] == null) {
+          try {
+            const { sound, status } = await Audio.Sound.createAsync(source, { shouldPlay: false });
+            if (status.isLoaded && isMounted) {
+              newDurations[ayahIndex] = Math.floor((status.durationMillis || 0) / 1000);
+            }
+            await sound.unloadAsync();
+          } catch (e) {
+            // ignore
+          }
+        } else if (audioDurations[ayahIndex] != null) {
+          newDurations[ayahIndex] = audioDurations[ayahIndex];
+        }
+      }
+      if (isMounted && Object.keys(newDurations).length > 0) {
+        setAudioDurations(prev => ({ ...prev, ...newDurations }));
+      }
+    })();
+    return () => { isMounted = false; };
+  }, [selectedSurah, currentPage]);
 
   const handleSurahPress = async (surah) => {
     setSelectedSurah(surah);
@@ -244,14 +280,26 @@ export default function AudioSurahList({ navigation }) {
           {currentAyahs.map(([key, value], idx) => {
             const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
             const elapsed = playingAyah === ayahIndex ? timer : Math.floor((lastPositions[ayahIndex] || 0) / 1000);
+            const status = playbackStatus[ayahIndex] || {};
+            const durationSec = audioDurations[ayahIndex] != null ? audioDurations[ayahIndex] : (status.durationMillis ? Math.floor(status.durationMillis / 1000) : 0);
+            const positionSec = status.positionMillis ? Math.floor(status.positionMillis / 1000) : elapsed;
+            const progress = durationSec > 0 ? positionSec / durationSec : 0;
+            const sliderWidth = '100%';
+            const handleSeek = async (value) => {
+              if (sound && playingAyah === ayahIndex) {
+                const millis = Math.floor(value * 1000);
+                await sound.setPositionAsync(millis);
+                setLastPositions((prev) => ({ ...prev, [ayahIndex]: millis }));
+              } else {
+                setLastPositions((prev) => ({ ...prev, [ayahIndex]: Math.floor(value * 1000) }));
+              }
+            };
             return (
-              <View key={key} style={styles.ayahBox}>
-                <Text style={[styles.ayahText, { fontFamily: 'UthmaniFull' }]}>
-                  {value}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View key={key} style={[styles.ayahCard, { marginBottom: 18 }]}>
+                <Text style={[styles.ayahText, { fontFamily: 'UthmaniFull', marginBottom: 8, textAlign: 'right' }]}>{value}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <TouchableOpacity
-                    style={styles.audioButton}
+                    style={[styles.audioButton, { marginRight: 8 }]}
                     onPress={() =>
                       playingAyah === ayahIndex
                         ? handleStopAudio()
@@ -260,20 +308,33 @@ export default function AudioSurahList({ navigation }) {
                   >
                     <MaterialIcons
                       name={playingAyah === ayahIndex ? 'stop' : 'play-arrow'}
-                      size={24}
+                      size={22}
                       color="#bfa76f"
                     />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.audioButton, { marginLeft: 6, backgroundColor: '#e0cfa9', paddingHorizontal: 10 }]}
+                    style={[styles.audioButton, { backgroundColor: '#e0cfa9', paddingHorizontal: 8, marginRight: 8 }]}
                     onPress={() => handleRestartAudio(ayahIndex)}
                   >
-                    <MaterialIcons name="replay" size={24} color="#7c5c1e" />
+                    <MaterialIcons name="replay" size={20} color="#7c5c1e" />
                   </TouchableOpacity>
-                  <Text style={{ marginLeft: 10, fontSize: 16, color: '#7c5c1e', fontFamily: 'UthmaniFull' }}>
-                    {elapsed}s
+                  <Text style={{ fontSize: 15, color: '#7c5c1e', fontFamily: 'UthmaniFull', minWidth: 60 }}>
+                    {positionSec} / {durationSec > 0 ? durationSec : 0}s
                   </Text>
                 </View>
+                <Slider
+                  style={{ width: sliderWidth, height: 32, alignSelf: 'center' }}
+                  minimumValue={0}
+                  maximumValue={durationSec > 0 ? durationSec : 1}
+                  value={positionSec}
+                  minimumTrackTintColor="#bfa76f"
+                  maximumTrackTintColor="#e0cfa9"
+                  thumbTintColor="#bfa76f"
+                  thumbStyle={{ height: 22, width: 22, borderRadius: 11, shadowColor: '#bfa76f', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4 }}
+                  trackStyle={{ height: 7, borderRadius: 4 }}
+                  onSlidingComplete={handleSeek}
+                  disabled={durationSec === 0}
+                />
               </View>
             );
           })}
