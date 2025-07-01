@@ -237,10 +237,9 @@ export default function AudioSurahList({ navigation }) {
             <Text style={surahListStyles.backArrow}>←</Text>
           </TouchableOpacity>
           <View style={surahListStyles.fullWidthSurahNameContainer}>
-            <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>
-              سورة {selectedSurah.name}
-            </Text>
-            <Text style={{ fontFamily: 'UthmaniFull', fontSize: 18, color: '#7c5c1e', marginTop: 4 }}>
+            <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سورة {selectedSurah.name}</Text>
+            <Text style={[styles.ayahCount, { fontFamily: 'UthmaniFull', marginTop: 4, marginBottom: 2 }]}>عدد الآيات: {selectedSurah.count}</Text>
+            <Text style={{ fontFamily: 'UthmaniFull', fontSize: 18, color: '#7c5c1e', marginTop: 0 }}>
               {revelationTypeMap[selectedSurah.number.toString()] 
                 ? `(${revelationTypeMap[selectedSurah.number.toString()]})` 
                 : ''}
@@ -257,10 +256,6 @@ export default function AudioSurahList({ navigation }) {
             { paddingBottom: showPagination ? 80 : 20 },
           ]}
         >
-          <Text style={[styles.ayahCount, { fontFamily: 'UthmaniFull' }]}>
-            عدد الآيات: {selectedSurah.count}
-          </Text>
-
           {currentAyahs.map(([key, value], idx) => {
             const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
             const elapsed = playingAyah === ayahIndex ? timer : Math.floor((lastPositions[ayahIndex] || 0) / 1000);
