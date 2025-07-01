@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { Audio } from 'expo-av';
 import surahJsonFiles from '../assets/source/surahJsonFiles';
+import audioFiles from '../assets/source/audioFiles';
 import surahScreenStyles from '../styles/SurahScreenStyles';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
@@ -11,11 +14,15 @@ export default function SurahScreen({ route, navigation }) {
   const surah = surahJsonFiles[number];
   const [currentPage, setCurrentPage] = useState(0);
   const scrollViewRef = useRef(null);
+  const [sound, setSound] = useState(null);
+  const [playingAyah, setPlayingAyah] = useState(null);
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
+  const playAllRef = useRef(false);
+  const [lastPlayedAyahIdx, setLastPlayedAyahIdx] = useState(null);
 
   // Extract ayahs as an array from the 'verse' object
   const ayahs = useMemo(() => {
     if (!surah || !surah.verse) return [];
-    // Get keys like 'verse_1', 'verse_2', ... and sort numerically
     return Object.keys(surah.verse)
       .sort((a, b) => {
         const numA = parseInt(a.replace('verse_', ''));
@@ -25,6 +32,7 @@ export default function SurahScreen({ route, navigation }) {
       .map((key, idx) => ({
         number: idx + 1,
         text: surah.verse[key],
+        audioIndex: idx, // index for audio file
       }));
   }, [surah]);
 
@@ -66,6 +74,105 @@ export default function SurahScreen({ route, navigation }) {
     }
   };
 
+  const handlePlayAudio = async (ayahIdx) => {
+    if (sound) {
+      await sound.unloadAsync();
+      setSound(null);
+      setPlayingAyah(null);
+      if (playingAyah === ayahIdx) return;
+    }
+    const surahKey = number.toString().padStart(3, '0');
+    const ayahKey = (ayahIdx).toString().padStart(3, '0');
+    const source = audioFiles[surahKey]?.[ayahKey];
+    if (!source) {
+      alert('الصوت غير متوفر لهذه الآية');
+      return;
+    }
+    try {
+      const { sound: newSound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
+      setSound(newSound);
+      setPlayingAyah(ayahIdx);
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setPlayingAyah(null);
+          setSound(null);
+        }
+      });
+    } catch (e) {
+      alert('تعذر تشغيل الصوت');
+    }
+  };
+
+  const handleStopAudio = async () => {
+    if (sound && playingAyah !== null) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(null);
+      setPlayingAyah(null);
+      setLastPlayedAyahIdx(playingAyah);
+    }
+  };
+
+  const playAllAyahs = async () => {
+    if (isPlayingAll) {
+      // Stop all
+      setIsPlayingAll(false);
+      playAllRef.current = false;
+      if (sound) {
+        await sound.stopAsync();
+        await sound.unloadAsync();
+        setSound(null);
+        setPlayingAyah(null);
+      }
+      setLastPlayedAyahIdx(playingAyah);
+      return;
+    }
+    setIsPlayingAll(true);
+    playAllRef.current = true;
+    let idx = lastPlayedAyahIdx !== null ? lastPlayedAyahIdx : currentPage * AYAHS_PER_PAGE;
+    const surahKey = number.toString().padStart(3, '0');
+    while (idx < ayahs.length && playAllRef.current) {
+      // If idx is at the start of a new page (not the first page), advance page and scroll
+      const pageIdx = Math.floor(idx / AYAHS_PER_PAGE);
+      if (pageIdx !== currentPage) {
+        setCurrentPage(pageIdx);
+        await new Promise((resolve) => setTimeout(resolve, 350)); // Wait for page change and scroll
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      }
+      const ayahKey = idx.toString().padStart(3, '0');
+      const source = audioFiles[surahKey]?.[ayahKey];
+      if (!source) {
+        idx++;
+        continue;
+      }
+      try {
+        setPlayingAyah(idx);
+        const { sound: newSound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
+        setSound(newSound);
+        await new Promise((resolve) => {
+          newSound.setOnPlaybackStatusUpdate((status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              resolve();
+            }
+          });
+        });
+        await newSound.unloadAsync();
+        setSound(null);
+        setPlayingAyah(null);
+        setLastPlayedAyahIdx(idx);
+      } catch (e) {
+        // skip on error
+      }
+      idx++;
+    }
+    setIsPlayingAll(false);
+    playAllRef.current = false;
+    setPlayingAyah(null);
+    setSound(null);
+    setLastPlayedAyahIdx(null);
+  };
+
   const currentAyahs = pages[currentPage] || [];
 
   return (
@@ -73,11 +180,41 @@ export default function SurahScreen({ route, navigation }) {
       <View style={surahScreenStyles.pageBackground}>
         {/* Full-width Surah Banner with Back Arrow on Left */}
         <View style={surahScreenStyles.fullWidthBanner}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={surahScreenStyles.fullWidthBackButton}>
-            <Text style={surahScreenStyles.backArrow}>←</Text>
-          </TouchableOpacity>
-          <View style={surahScreenStyles.fullWidthSurahNameContainer}>
-            <Text style={surahScreenStyles.surahNameHeader}>{surah.name}</Text>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 6 }}>
+              <Text style={surahScreenStyles.backArrow}>←</Text>
+            </TouchableOpacity>
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={surahScreenStyles.surahNameHeader}>{surah.name}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity onPress={playAllAyahs} style={{ paddingHorizontal: 2 }}>
+                <MaterialIcons
+                  name={isPlayingAll ? 'stop-circle' : 'play-circle-outline'}
+                  size={28}
+                  color={isPlayingAll ? '#bfa76f' : '#7c5c1e'}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  setLastPlayedAyahIdx(0);
+                  if (isPlayingAll) {
+                    playAllRef.current = false;
+                    setIsPlayingAll(false);
+                    if (sound) {
+                      await sound.stopAsync();
+                      await sound.unloadAsync();
+                      setSound(null);
+                      setPlayingAyah(null);
+                    }
+                  }
+                  setTimeout(() => playAllAyahs(), 100);
+                }}
+                style={{ paddingHorizontal: 2 }}
+              >
+                <MaterialIcons name="replay" size={28} color="#7c5c1e" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
         {/* Ayahs Content */}
@@ -100,14 +237,23 @@ export default function SurahScreen({ route, navigation }) {
             <Text style={surahScreenStyles.paragraphText}>
               {currentAyahs.map((ayah, idx) => (
                 <React.Fragment key={ayah.number}>
-                  <Text style={surahScreenStyles.ayahText}>
-                    {ayah.text}
-                  </Text>
+                  <Text style={surahScreenStyles.ayahText}>{ayah.text}</Text>
                   <Text style={surahScreenStyles.ayahNumber}>
                     {' ﴿'}
                     <Text style={surahScreenStyles.ayahNumberInner}>{ayah.number}</Text>
                     {'﴾ '}
                   </Text>
+                  <TouchableOpacity
+                    onPress={() => playingAyah === ayah.audioIndex ? handleStopAudio() : handlePlayAudio(ayah.audioIndex)}
+                    style={{ marginHorizontal: 2, alignSelf: 'center' }}
+                    disabled={isPlayingAll}
+                  >
+                    <MaterialIcons
+                      name={playingAyah === ayah.audioIndex ? 'stop-circle' : 'play-circle-outline'}
+                      size={22}
+                      color={playingAyah === ayah.audioIndex ? '#bfa76f' : '#7c5c1e'}
+                    />
+                  </TouchableOpacity>
                   {idx !== currentAyahs.length - 1 && (
                     <Text style={surahScreenStyles.ayahSeparator}> </Text>
                   )}
