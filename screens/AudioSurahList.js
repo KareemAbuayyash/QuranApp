@@ -11,15 +11,16 @@ import {
   TextInput,
 } from 'react-native';
 import { Audio } from 'expo-av';
-import surahList       from '../assets/quran/surah-list.json';
+import surahList from '../assets/source/surah.json';
 import surahListStyles from '../styles/SurahListStyles';
-import styles          from '../styles/AudioSurahListStyles';
-import audioFiles      from '../assets/source/audioFiles';
-import surahJsonFiles  from '../assets/source/surahJsonFiles';
+import styles from '../styles/AudioSurahListStyles';
+import audioFiles from '../assets/source/audioFiles';
+import surahJsonFiles from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import { MaterialIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import normalizeArabic from '../components/normalizeArabic';
+import normalizeEnglish from '../components/normalizeEnglish';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15;
@@ -156,9 +157,9 @@ export default function AudioSurahList({ navigation }) {
       const text = searchText.trim().toLowerCase();
       if (!text) return true;
       return (
-        normalizeArabic(item.name.toLowerCase()).includes(normalizeArabic(text)) ||
-        item.englishName.toLowerCase().includes(text) ||
-        item.number.toString().includes(text)
+        normalizeArabic(item.titleAr).includes(normalizeArabic(text)) ||
+        normalizeEnglish(item.title).includes(normalizeEnglish(text)) ||
+        parseInt(item.index, 10).toString().includes(text)
       );
     });
     return (
@@ -186,26 +187,27 @@ export default function AudioSurahList({ navigation }) {
           />
           <FlatList
             data={filteredSurahList}
-            keyExtractor={item => item.number.toString()}
+            keyExtractor={item => parseInt(item.index, 10).toString()}
             contentContainerStyle={surahListStyles.listContent}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.surahItem}
                 onPress={() => {
-                  const json = surahJsonFiles[item.number.toString()];
+                  const json = surahJsonFiles[parseInt(item.index, 10).toString()];
                   if (!json) {
                     alert('هذه السورة غير متوفرة في العرض التجريبي');
                     return;
                   }
-                  handleSurahPress({ ...item, ...json, index: item.number.toString().padStart(3, '0') });
+                  handleSurahPress({ ...item, ...json, index: item.index });
                 }}
               >
-                <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {item.number}. {item.name} ({item.englishName}) </Text>
+                <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {parseInt(item.index, 10)}. {item.titleAr} ({item.title}) </Text>
                 <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
-                  {revelationTypeMap[item.number.toString()] 
-                    ? `(${revelationTypeMap[item.number.toString()]})` 
+                  {revelationTypeMap[parseInt(item.index, 10).toString()]
+                    ? `(${revelationTypeMap[parseInt(item.index, 10).toString()]})`
                     : ''}
                 </Text>
+                <Text style={{ fontSize: 14, color: '#bfa76f' }}>عدد الآيات: {item.count}</Text>
               </TouchableOpacity>
             )}
           />
@@ -238,11 +240,11 @@ export default function AudioSurahList({ navigation }) {
             <Text style={surahListStyles.backArrow}>←</Text>
           </TouchableOpacity>
           <View style={surahListStyles.fullWidthSurahNameContainer}>
-            <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سورة {selectedSurah.name}</Text>
+            <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سورة {selectedSurah.titleAr}</Text>
             <Text style={[styles.ayahCount, { fontFamily: 'UthmaniFull', marginTop: 4, marginBottom: 2 }]}>عدد الآيات: {selectedSurah.count}</Text>
             <Text style={{ fontFamily: 'UthmaniFull', fontSize: 18, color: '#7c5c1e', marginTop: 0 }}>
-              {revelationTypeMap[selectedSurah.number.toString()] 
-                ? `(${revelationTypeMap[selectedSurah.number.toString()]})` 
+              {revelationTypeMap[parseInt(selectedSurah.index, 10).toString()] 
+                ? `(${revelationTypeMap[parseInt(selectedSurah.index, 10).toString()]})` 
                 : ''}
             </Text>
           </View>
