@@ -10,7 +10,7 @@ const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
 
 export default function SurahScreen({ route, navigation }) {
-  const { number } = route.params;
+  const { number, autoPlay } = route.params;
   const surah = surahJsonFiles[number];
   const [currentPage, setCurrentPage] = useState(0);
   const scrollViewRef = useRef(null);
@@ -53,11 +53,23 @@ export default function SurahScreen({ route, navigation }) {
     // Cleanup function to stop audio when leaving the screen
     return () => {
       if (sound) {
-        sound.stopAsync();
-        sound.unloadAsync();
+        sound.getStatusAsync().then(status => {
+          if (status.isLoaded) {
+            sound.stopAsync();
+            sound.unloadAsync();
+          }
+        });
       }
     };
   }, [sound]);
+
+  useEffect(() => {
+    if (autoPlay) {
+      setCurrentPage(0);
+      setLastPlayedAyahIdx(null);
+      setTimeout(() => playAllAyahs(true), 100);
+    }
+  }, [autoPlay]);
 
   if (!surah) {
     return <Text style={surahScreenStyles.loading}>لم أجد بيانات السورة #{number}</Text>;
@@ -86,7 +98,11 @@ export default function SurahScreen({ route, navigation }) {
 
   const handlePlayAudio = async (ayahIdx) => {
     if (sound) {
-      await sound.unloadAsync();
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded) {
+        await sound.stopAsync();
+        await sound.unloadAsync();
+      }
       setSound(null);
       setPlayingAyah(null);
       if (playingAyah === ayahIdx) return;
@@ -115,22 +131,28 @@ export default function SurahScreen({ route, navigation }) {
 
   const handleStopAudio = async () => {
     if (sound && playingAyah !== null) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded) {
+        await sound.stopAsync();
+        await sound.unloadAsync();
+      }
       setSound(null);
       setPlayingAyah(null);
       setLastPlayedAyahIdx(playingAyah);
     }
   };
 
-  const playAllAyahs = async () => {
+  const playAllAyahs = async (forceRestart = false) => {
     if (isPlayingAll) {
       // Stop all
       setIsPlayingAll(false);
       playAllRef.current = false;
       if (sound) {
-        await sound.stopAsync();
-        await sound.unloadAsync();
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        }
         setSound(null);
         setPlayingAyah(null);
       }
@@ -206,19 +228,8 @@ export default function SurahScreen({ route, navigation }) {
                 />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={async () => {
-                  setLastPlayedAyahIdx(0);
-                  if (isPlayingAll) {
-                    playAllRef.current = false;
-                    setIsPlayingAll(false);
-                    if (sound) {
-                      await sound.stopAsync();
-                      await sound.unloadAsync();
-                      setSound(null);
-                      setPlayingAyah(null);
-                    }
-                  }
-                  setTimeout(() => playAllAyahs(), 100);
+                onPress={() => {
+                  navigation.replace('SurahScreen', { number: 1, autoPlay: true });
                 }}
                 style={{ paddingHorizontal: 2 }}
               >
