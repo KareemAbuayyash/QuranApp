@@ -12,6 +12,7 @@ import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import normalizeArabic from '../components/normalizeArabic';
+import normalizeEnglish from '../components/normalizeEnglish';
 
 export default function SurahList({ navigation }) {
   const [searchText, setSearchText] = useState('');
@@ -22,7 +23,7 @@ export default function SurahList({ navigation }) {
     if (!text) return surahList;
     return surahList.filter(item =>
       normalizeArabic(item.titleAr).includes(normalizeArabic(text)) ||
-      item.title.toLowerCase().includes(text) ||
+      normalizeEnglish(item.title).includes(normalizeEnglish(text)) ||
       parseInt(item.index, 10).toString().includes(text)
     );
   }, [searchText]);
