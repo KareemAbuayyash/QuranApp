@@ -105,7 +105,7 @@ export default function SurahScreen({ route, navigation }) {
       const status = await sound.getStatusAsync();
       if (status.isLoaded) {
         await sound.stopAsync();
-        await sound.unloadAsync();
+      await sound.unloadAsync();
       }
       setSound(null);
       setPlayingAyah(null);
@@ -137,8 +137,8 @@ export default function SurahScreen({ route, navigation }) {
     if (sound && playingAyah !== null) {
       const status = await sound.getStatusAsync();
       if (status.isLoaded) {
-        await sound.stopAsync();
-        await sound.unloadAsync();
+      await sound.stopAsync();
+      await sound.unloadAsync();
       }
       setSound(null);
       setPlayingAyah(null);
@@ -155,8 +155,8 @@ export default function SurahScreen({ route, navigation }) {
       if (sound) {
         const status = await sound.getStatusAsync();
         if (status.isLoaded) {
-          await sound.stopAsync();
-          await sound.unloadAsync();
+        await sound.stopAsync();
+        await sound.unloadAsync();
         }
         setSound(null);
         setPlayingAyah(null);
@@ -218,19 +218,19 @@ export default function SurahScreen({ route, navigation }) {
     setIsRestarting(true);
     setLastPlayedAyahIdx(null);
     setCurrentPage(0);
-    if (isPlayingAll) {
-      playAllRef.current = false;
-      setIsPlayingAll(false);
-      if (sound) {
+                  if (isPlayingAll) {
+                    playAllRef.current = false;
+                    setIsPlayingAll(false);
+                    if (sound) {
         const status = await sound.getStatusAsync();
         if (status.isLoaded) {
-          await sound.stopAsync();
-          await sound.unloadAsync();
+                      await sound.stopAsync();
+                      await sound.unloadAsync();
         }
-        setSound(null);
-        setPlayingAyah(null);
-      }
-    }
+                      setSound(null);
+                      setPlayingAyah(null);
+                    }
+                  }
     setTimeout(() => {
       playAllAyahs(true);
       setIsRestarting(false);
@@ -248,7 +248,7 @@ export default function SurahScreen({ route, navigation }) {
           onRestart={handleRestart}
           restartDisabled={isRestarting}
         />
-        <ScrollView
+        <ScrollView 
           ref={scrollViewRef}
           style={surahScreenStyles.scrollContainer}
           showsVerticalScrollIndicator={false}
