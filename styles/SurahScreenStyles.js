@@ -71,13 +71,13 @@ const surahScreenStyles = StyleSheet.create({
     textAlign: 'right',
     lineHeight: 40,
     fontSize: 24,
-    fontFamily: 'Cochin',
+    fontFamily: 'UthmaniFull',
   },
   ayahText: {
     color: '#2c2c2c',
     fontSize: 24,
     lineHeight: 40,
-    fontFamily: 'Uthmani',
+    fontFamily: 'UthmaniFull',
   },
   ayahNumber: {
     color: '#bfa76f',
@@ -161,10 +161,11 @@ const surahScreenStyles = StyleSheet.create({
     // Removed - no longer needed
   },
   backArrow: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#7c5c1e',
     fontWeight: 'bold',
     marginRight: 12,
+    marginTop: -9,
   },
   surahBannerHeader: {
     flexDirection: 'row',

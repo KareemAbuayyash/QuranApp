@@ -20,50 +20,9 @@ import surahList from '../assets/quran/surah-list.json';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import searchScreenStyles from '../styles/SearchScreenStyles';
+import normalizeArabicFull from '../components/normalizeArabicFull';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-// Enhanced Arabic text normalization function
-const normalizeArabicText = (text) => {
-  if (!text) return '';
-  
-  let normalized = text;
-  
-  // Remove all Arabic diacritics and marks
-  normalized = normalized.replace(/[\u064B-\u065F]/g, ''); // Standard diacritics
-  normalized = normalized.replace(/[\u0670]/g, ''); // Superscript Alef
-  normalized = normalized.replace(/[\u06D6-\u06ED]/g, ''); // Quranic marks
-  normalized = normalized.replace(/[\u06DC-\u06E4]/g, ''); // Additional marks
-  normalized = normalized.replace(/[\u06E7-\u06E8]/g, ''); // More marks
-  normalized = normalized.replace(/[\u06EA-\u06ED]/g, ''); // Extended marks
-  normalized = normalized.replace(/[\u08F0-\u08FF]/g, ''); // Extended Arabic marks
-  
-  // Normalize letter forms
-  const letterMappings = {
-    // Alef variations
-    'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا',
-    // Ya variations  
-    'ى': 'ي', 'ئ': 'ي',
-    // Ta Marbuta
-    'ة': 'ه',
-    // Hamza variations
-    'ؤ': 'و',
-    'ء': '', // Remove standalone hamza for better matching
-    // Remove Tatweel (kashida)
-    'ـ': ''
-  };
-  
-  // Apply letter mappings
-  for (const [original, replacement] of Object.entries(letterMappings)) {
-    normalized = normalized.replace(new RegExp(original, 'g'), replacement);
-  }
-  
-  // Clean up and normalize
-  return normalized
-    .replace(/\s+/g, ' ') // Normalize spaces
-    .trim()
-    .toLowerCase();
-};
 
 export default function SearchScreen() {
   const [surahQuery, setSurahQuery] = useState('');
@@ -108,10 +67,10 @@ export default function SearchScreen() {
   const filteredAyahs = useMemo(() => {
     const q = ayahModalSearch.trim();
     if (!q) return ayahObjects;
-    const normalizedQuery = normalizeArabicText(q);
+    const normalizedQuery = normalizeArabicFull(q);
     return ayahObjects.filter(
       a => a.number.toString().includes(q) || 
-           (a.text && normalizeArabicText(a.text).includes(normalizedQuery))
+           (a.text && normalizeArabicFull(a.text).includes(normalizedQuery))
     );
   }, [ayahModalSearch, ayahObjects]);
 
@@ -145,7 +104,7 @@ export default function SearchScreen() {
     // If searching by text
     if (searchMode === 'text' && ayahTextQuery.trim()) {
       const query = ayahTextQuery.trim();
-      const normalizedQuery = normalizeArabicText(query);
+      const normalizedQuery = normalizeArabicFull(query);
       const foundResults = [];
 
       // If query is too short, require at least 2 characters
@@ -160,7 +119,7 @@ export default function SearchScreen() {
         if (surah && surah.ayahs) {
           surah.ayahs.forEach(ayah => {
             if (ayah.text) {
-              const normalizedAyahText = normalizeArabicText(ayah.text);
+              const normalizedAyahText = normalizeArabicFull(ayah.text);
               
               // Check if the normalized query exists in the normalized ayah text
               if (normalizedAyahText.includes(normalizedQuery)) {
