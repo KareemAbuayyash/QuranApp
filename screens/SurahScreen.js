@@ -5,6 +5,9 @@ import surahJsonFiles from '../assets/source/surahJsonFiles';
 import audioFiles from '../assets/source/audioFiles';
 import surahScreenStyles from '../styles/SurahScreenStyles';
 import { MaterialIcons } from '@expo/vector-icons';
+import SurahHeader from '../components/SurahHeader';
+import AyahList from '../components/AyahList';
+import PaginationControls from '../components/PaginationControls';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
@@ -19,6 +22,7 @@ export default function SurahScreen({ route, navigation }) {
   const [isPlayingAll, setIsPlayingAll] = useState(false);
   const playAllRef = useRef(false);
   const [lastPlayedAyahIdx, setLastPlayedAyahIdx] = useState(null);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   // Extract ayahs as an array from the 'verse' object
   const ayahs = useMemo(() => {
@@ -143,6 +147,7 @@ export default function SurahScreen({ route, navigation }) {
   };
 
   const playAllAyahs = async (forceRestart = false) => {
+    if (typeof forceRestart !== 'boolean') forceRestart = false;
     if (isPlayingAll) {
       // Stop all
       setIsPlayingAll(false);
@@ -161,7 +166,8 @@ export default function SurahScreen({ route, navigation }) {
     }
     setIsPlayingAll(true);
     playAllRef.current = true;
-    let idx = lastPlayedAyahIdx !== null ? lastPlayedAyahIdx : currentPage * AYAHS_PER_PAGE;
+    let idx = forceRestart ? 0 : (lastPlayedAyahIdx !== null ? lastPlayedAyahIdx : currentPage * AYAHS_PER_PAGE);
+    console.log('playAllAyahs starting at idx:', idx, 'forceRestart:', forceRestart, 'lastPlayedAyahIdx:', lastPlayedAyahIdx, 'currentPage:', currentPage);
     const surahKey = number.toString().padStart(3, '0');
     while (idx < ayahs.length && playAllRef.current) {
       // If idx is at the start of a new page (not the first page), advance page and scroll
@@ -207,39 +213,42 @@ export default function SurahScreen({ route, navigation }) {
 
   const currentAyahs = pages[currentPage] || [];
 
+  const handleRestart = async () => {
+    if (isRestarting) return;
+    setIsRestarting(true);
+    setLastPlayedAyahIdx(null);
+    setCurrentPage(0);
+    if (isPlayingAll) {
+      playAllRef.current = false;
+      setIsPlayingAll(false);
+      if (sound) {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        }
+        setSound(null);
+        setPlayingAyah(null);
+      }
+    }
+    setTimeout(() => {
+      playAllAyahs(true);
+      setIsRestarting(false);
+    }, 100);
+  };
+
   return (
     <View style={surahScreenStyles.container}>
       <View style={surahScreenStyles.pageBackground}>
-        {/* Full-width Surah Banner with Back Arrow on Left */}
-        <View style={surahScreenStyles.fullWidthBanner}>
-          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 6 }}>
-              <Text style={surahScreenStyles.backArrow}>←</Text>
-            </TouchableOpacity>
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={surahScreenStyles.surahNameHeader}>{surah.name}</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity onPress={playAllAyahs} style={{ paddingHorizontal: 2 }}>
-                <MaterialIcons
-                  name={isPlayingAll ? 'stop-circle' : 'play-circle-outline'}
-                  size={28}
-                  color={isPlayingAll ? '#bfa76f' : '#7c5c1e'}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  navigation.replace('SurahScreen', { number: 1, autoPlay: true });
-                }}
-                style={{ paddingHorizontal: 2 }}
-              >
-                <MaterialIcons name="replay" size={28} color="#7c5c1e" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-        {/* Ayahs Content */}
-        <ScrollView 
+        <SurahHeader
+          surahName={surah.name}
+          onBack={() => navigation.goBack()}
+          onPlayAll={() => playAllAyahs(false)}
+          isPlayingAll={isPlayingAll}
+          onRestart={handleRestart}
+          restartDisabled={isRestarting}
+        />
+        <ScrollView
           ref={scrollViewRef}
           style={surahScreenStyles.scrollContainer}
           showsVerticalScrollIndicator={false}
@@ -248,83 +257,22 @@ export default function SurahScreen({ route, navigation }) {
             { paddingBottom: showPagination ? 80 : 20 }
           ]}
         >
-          {/* Basmala Image (scrolls with content) */}
-          {currentPage === 0 && (
-            <View style={surahScreenStyles.basmalaContainer}>
-              <Image source={require('../assets/basmala.png')} style={surahScreenStyles.basmalaImage} resizeMode="contain" />
-            </View>
-          )}
-          <View style={surahScreenStyles.ayahFrame}>
-            <Text style={surahScreenStyles.paragraphText}>
-              {currentAyahs.map((ayah, idx) => (
-                <React.Fragment key={ayah.number}>
-                  <Text style={surahScreenStyles.ayahText}>{ayah.text}</Text>
-                  <Text style={surahScreenStyles.ayahNumber}>
-                    {' ﴿'}
-                    <Text style={surahScreenStyles.ayahNumberInner}>{ayah.number}</Text>
-                    {'﴾ '}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => playingAyah === ayah.audioIndex ? handleStopAudio() : handlePlayAudio(ayah.audioIndex)}
-                    style={{ marginHorizontal: 2, alignSelf: 'center' }}
-                    disabled={isPlayingAll}
-                  >
-                    <MaterialIcons
-                      name={playingAyah === ayah.audioIndex ? 'stop-circle' : 'play-circle-outline'}
-                      size={22}
-                      color={playingAyah === ayah.audioIndex ? '#bfa76f' : '#7c5c1e'}
-                    />
-                  </TouchableOpacity>
-                  {idx !== currentAyahs.length - 1 && (
-                    <Text style={surahScreenStyles.ayahSeparator}> </Text>
-                  )}
-                </React.Fragment>
-              ))}
-            </Text>
-          </View>
+          <AyahList
+            ayahs={currentAyahs}
+            showBasmala={currentPage === 0}
+            playingAyah={playingAyah}
+            isPlayingAll={isPlayingAll}
+            onPlayAyah={handlePlayAudio}
+            onStopAyah={handleStopAudio}
+          />
         </ScrollView>
-
-        {/* Pagination Controls */}
         {showPagination && (
-          <View style={surahScreenStyles.paginationContainer}>
-            <TouchableOpacity
-              style={[
-                surahScreenStyles.arrowButton,
-                currentPage === totalPages - 1 && surahScreenStyles.arrowButtonDisabled
-              ]}
-              onPress={goToNextPage}
-              disabled={currentPage === totalPages - 1}
-            >
-              <Text style={[
-                surahScreenStyles.arrowText,
-                currentPage === totalPages - 1 && surahScreenStyles.arrowTextDisabled
-              ]}>
-                ←
-              </Text>
-            </TouchableOpacity>
-
-            <View style={surahScreenStyles.pageInfoContainer}>
-              <Text style={surahScreenStyles.pageInfoText}>
-                {currentPage + 1} من {totalPages}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                surahScreenStyles.arrowButton,
-                currentPage === 0 && surahScreenStyles.arrowButtonDisabled
-              ]}
-              onPress={goToPrevPage}
-              disabled={currentPage === 0}
-            >
-              <Text style={[
-                surahScreenStyles.arrowText,
-                currentPage === 0 && surahScreenStyles.arrowTextDisabled
-              ]}>
-                →
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onNext={goToNextPage}
+            onPrev={goToPrevPage}
+          />
         )}
       </View>
     </View>
