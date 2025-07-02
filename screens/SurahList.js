@@ -7,10 +7,9 @@ import {
   SafeAreaView,
   TextInput,
 } from 'react-native';
-import surahList from '../assets/quran/surah-list.json';
+import surahList from '../assets/source/surah.json';
 import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
-import surahJsonFiles from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import normalizeArabic from '../components/normalizeArabic';
 
@@ -22,9 +21,9 @@ export default function SurahList({ navigation }) {
     const text = searchText.trim().toLowerCase();
     if (!text) return surahList;
     return surahList.filter(item =>
-      normalizeArabic(item.name.toLowerCase()).includes(normalizeArabic(text)) ||
-      item.englishName.toLowerCase().includes(text) ||
-      item.number.toString().includes(text)
+      normalizeArabic(item.titleAr).includes(normalizeArabic(text)) ||
+      item.title.toLowerCase().includes(text) ||
+      parseInt(item.index, 10).toString().includes(text)
     );
   }, [searchText]);
 
@@ -53,21 +52,22 @@ export default function SurahList({ navigation }) {
         />
         <FlatList
           data={filteredSurahList}
-          keyExtractor={item => item.number.toString()}
+          keyExtractor={item => parseInt(item.index, 10).toString()}
           contentContainerStyle={surahListStyles.listContent}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.surahItem}
               onPress={() => {
-                navigation.navigate('SurahScreen', { number: item.number.toString() });
+                navigation.navigate('SurahScreen', { number: parseInt(item.index, 10).toString() });
               }}
             >
-              <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {item.number}. {item.name} ({item.englishName}) </Text>
+              <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {parseInt(item.index, 10)}. {item.titleAr} ({item.title}) </Text>
               <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
-                {revelationTypeMap[item.number.toString()] 
-                  ? `(${revelationTypeMap[item.number.toString()]})` 
+                {revelationTypeMap[parseInt(item.index, 10).toString()]
+                  ? `(${revelationTypeMap[parseInt(item.index, 10).toString()]})`
                   : ''}
               </Text>
+              <Text style={{ fontSize: 14, color: '#bfa76f' }}>عدد الآيات: {item.count}</Text>
             </TouchableOpacity>
           )}
         />
