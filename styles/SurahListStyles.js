@@ -19,7 +19,7 @@ const surahListStyles = StyleSheet.create({
     borderColor: '#bfa76f',
     borderWidth: 2,
     borderRadius: 16,
-    marginTop: 30,
+    marginTop: -15,
     marginBottom: 16,
     marginStart: 10,
     marginEnd: 10,

@@ -21,7 +21,7 @@ const homeScreenStyles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 12,
     marginHorizontal: 18,
-    marginTop: 30,
+    marginTop: 0,
   },
   logoGlowContainer: {
     alignItems: 'center',
