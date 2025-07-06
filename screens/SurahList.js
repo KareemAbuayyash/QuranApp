@@ -17,13 +17,16 @@ import normalizeEnglish from '../components/normalizeEnglish';
 export default function SurahList({ navigation }) {
   const [searchText, setSearchText] = useState('');
 
-  // Filter surah list by search text
+  // Filter surah list by search text using improved normalization logic
   const filteredSurahList = useMemo(() => {
-    const text = searchText.trim().toLowerCase();
+    const text = searchText.trim();
     if (!text) return surahList;
+    const normalizedArabicSearch = normalizeArabic(text);
+    const normalizedEnglishSearch = normalizeEnglish(text);
     return surahList.filter(item =>
-      normalizeArabic(item.titleAr).includes(normalizeArabic(text)) ||
-      normalizeEnglish(item.title).includes(normalizeEnglish(text)) ||
+      (normalizedArabicSearch && normalizeArabic(item.titleAr).includes(normalizedArabicSearch)) ||
+      (normalizedEnglishSearch && normalizeEnglish(item.title).includes(normalizedEnglishSearch)) ||
+      item.index.includes(text) ||
       parseInt(item.index, 10).toString().includes(text)
     );
   }, [searchText]);
