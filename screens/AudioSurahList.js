@@ -1,5 +1,5 @@
 // screens/AudioSurahList.js
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,23 @@ import {
   SafeAreaView,
   Dimensions,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Audio } from 'expo-av';
-import surahList       from '../assets/quran/surah-list.json';
+import surahList from '../assets/source/surah.json';
 import surahListStyles from '../styles/SurahListStyles';
-import styles          from '../styles/AudioSurahListStyles';
-import audioFiles      from '../assets/source/audioFiles';
-import surahJsonFiles  from '../assets/source/surahJsonFiles';
+import styles from '../styles/AudioSurahListStyles';
+import audioFiles from '../assets/source/audioFiles';
+import surahJsonFiles from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import { MaterialIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import normalizeArabic from '../components/normalizeArabic';
+import normalizeEnglish from '../components/normalizeEnglish';
+import AudioSurahListHeader from '../components/AudioSurahListHeader';
+import AudioSurahListSearchList from '../components/AudioSurahListSearchList';
+import SurahAudioList from '../components/SurahAudioList';
+import AudioSurahPagination from '../components/AudioSurahPagination';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15;
@@ -34,6 +40,30 @@ export default function AudioSurahList({ navigation }) {
   const [playbackStatus, setPlaybackStatus] = useState({}); // ayahIndex: { positionMillis, durationMillis }
   const [timer, setTimer] = useState(0);
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for audio surah list data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 seconds loading time
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Filter surah list using normalization
+  const filteredSurahList = useMemo(() => {
+    const text = searchText.trim();
+    if (!text) return surahList;
+    const normalizedArabicSearch = normalizeArabic(text);
+    const normalizedEnglishSearch = normalizeEnglish(text);
+    return surahList.filter(item =>
+      (normalizedArabicSearch && normalizeArabic(item.titleAr).includes(normalizedArabicSearch)) ||
+      (normalizedEnglishSearch && normalizeEnglish(item.title).includes(normalizedEnglishSearch)) ||
+      item.index.includes(text) ||
+      parseInt(item.index, 10).toString().includes(text)
+    );
+  }, [searchText, surahList]);
 
   // تقسيم الآيات إلى صفحات
   const pages = useMemo(() => {
@@ -149,65 +179,42 @@ export default function AudioSurahList({ navigation }) {
     }
   };
 
+  // Show loading screen
+  if (loading) {
+    return (
+      <View style={surahListStyles.loadingContainer}>
+        <View style={surahListStyles.loadingContent}>
+          <ActivityIndicator size="large" color="#bfa76f" />
+          <Text style={surahListStyles.loadingText}>جاري تحميل السور الصوتية...</Text>
+        </View>
+      </View>
+    );
+  }
+
   // إذا لم يتم اختيار سورة بعد
   if (!selectedSurah) {
-    // Filter surah list by search text
-    const filteredSurahList = surahList.filter(item => {
-      const text = searchText.trim().toLowerCase();
-      if (!text) return true;
-      return (
-        normalizeArabic(item.name.toLowerCase()).includes(normalizeArabic(text)) ||
-        item.englishName.toLowerCase().includes(text) ||
-        item.number.toString().includes(text)
-      );
-    });
     return (
       <SafeAreaView style={surahListStyles.safeArea}>
         <View style={surahListStyles.pageBackground}>
-          <View style={surahListStyles.fullWidthBanner}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack?.()}
-              style={surahListStyles.fullWidthBackButton}
-            >
-              <Text style={surahListStyles.backArrow}>←</Text>
-            </TouchableOpacity>
-            <View style={surahListStyles.fullWidthSurahNameContainer}>
-              <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سور مع الصوت</Text>
-            </View>
-          </View>
-          <TextInput
-            style={surahListStyles.searchBar}
-            placeholder="ابحث باسم السورة أو رقمها أو بالإنجليزي..."
-            placeholderTextColor="#bfa76f"
-            value={searchText}
-            onChangeText={setSearchText}
-            clearButtonMode="while-editing"
-            textAlign="right"
+          <AudioSurahListHeader
+            onBack={() => navigation.goBack?.()}
+            surahName="مع الصوت"
+            ayahCount={surahList.length}
+            revelationType={null}
           />
-          <FlatList
-            data={filteredSurahList}
-            keyExtractor={item => item.number.toString()}
-            contentContainerStyle={surahListStyles.listContent}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.surahItem}
-                onPress={() => {
-                  const json = surahJsonFiles[item.number.toString()];
-                  if (!json) {
-                    alert('هذه السورة غير متوفرة في العرض التجريبي');
-                    return;
-                  }
-                  handleSurahPress({ ...item, ...json, index: item.number.toString().padStart(3, '0') });
-                }}
-              >
-                <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {item.number}. {item.name} ({item.englishName}) </Text>
-                <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
-                  {revelationTypeMap[item.number.toString()] 
-                    ? `(${revelationTypeMap[item.number.toString()]})` 
-                    : ''}
-                </Text>
-              </TouchableOpacity>
-            )}
+          <AudioSurahListSearchList
+            surahList={filteredSurahList}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            onSurahPress={item => {
+              const json = surahJsonFiles[parseInt(item.index, 10).toString()];
+              if (!json) {
+                alert('هذه السورة غير متوفرة في العرض التجريبي');
+                return;
+              }
+              handleSurahPress({ ...item, ...json, index: item.index });
+            }}
+            revelationTypeMap={revelationTypeMap}
           />
         </View>
       </SafeAreaView>
@@ -222,32 +229,20 @@ export default function AudioSurahList({ navigation }) {
   return (
     <SafeAreaView style={surahListStyles.safeArea}>
       <View style={surahListStyles.pageBackground}>
-        <View style={surahListStyles.fullWidthBanner}>
-          <TouchableOpacity
-            onPress={async () => {
-              setSelectedSurah(null);
-              setPlayingAyah(null);
-              setCurrentPage(0);
-              if (sound) {
-                await sound.unloadAsync();
-                setSound(null);
-              }
-            }}
-            style={surahListStyles.fullWidthBackButton}
-          >
-            <Text style={surahListStyles.backArrow}>←</Text>
-          </TouchableOpacity>
-          <View style={surahListStyles.fullWidthSurahNameContainer}>
-            <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سورة {selectedSurah.name}</Text>
-            <Text style={[styles.ayahCount, { fontFamily: 'UthmaniFull', marginTop: 4, marginBottom: 2 }]}>عدد الآيات: {selectedSurah.count}</Text>
-            <Text style={{ fontFamily: 'UthmaniFull', fontSize: 18, color: '#7c5c1e', marginTop: 0 }}>
-              {revelationTypeMap[selectedSurah.number.toString()] 
-                ? `(${revelationTypeMap[selectedSurah.number.toString()]})` 
-                : ''}
-            </Text>
-          </View>
-        </View>
-
+        <AudioSurahListHeader
+          onBack={async () => {
+            setSelectedSurah(null);
+            setPlayingAyah(null);
+            setCurrentPage(0);
+            if (sound) {
+              await sound.unloadAsync();
+              setSound(null);
+            }
+          }}
+          surahName={selectedSurah.titleAr}
+          ayahCount={selectedSurah.count}
+          revelationType={revelationTypeMap[parseInt(selectedSurah.index, 10).toString()]}
+        />
         <ScrollView
           ref={scrollViewRef}
           style={styles.container}
@@ -257,113 +252,28 @@ export default function AudioSurahList({ navigation }) {
             { paddingBottom: showPagination ? 80 : 20 },
           ]}
         >
-          {currentAyahs.map(([key, value], idx) => {
-            const ayahIndex = currentPage * AYAHS_PER_PAGE + idx;
-            const elapsed = playingAyah === ayahIndex ? timer : Math.floor((lastPositions[ayahIndex] || 0) / 1000);
-            const status = playbackStatus[ayahIndex] || {};
-            const durationSec = status.durationMillis ? Math.floor(status.durationMillis / 1000) : 0;
-            const positionSec = status.positionMillis ? Math.floor(status.positionMillis / 1000) : elapsed;
-            const progress = durationSec > 0 ? positionSec / durationSec : 0;
-            const sliderWidth = '100%';
-            const handleSeek = async (value) => {
-              if (sound && playingAyah === ayahIndex) {
-                const millis = Math.floor(value * 1000);
-                await sound.setPositionAsync(millis);
-                setLastPositions((prev) => ({ ...prev, [ayahIndex]: millis }));
-              } else {
-                setLastPositions((prev) => ({ ...prev, [ayahIndex]: Math.floor(value * 1000) }));
-              }
-            };
-            return (
-              <View key={key} style={[styles.ayahCard, { marginBottom: 18 }]}>
-                <Text style={[styles.ayahText, { fontFamily: 'UthmaniFull', marginBottom: 8, textAlign: 'right' }]}>{value}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <TouchableOpacity
-                    style={[styles.audioButton, { marginRight: 8 }]}
-                    onPress={() =>
-                      playingAyah === ayahIndex
-                        ? handleStopAudio()
-                        : handlePlayAudio(ayahIndex)
-                    }
-                  >
-                    <MaterialIcons
-                      name={playingAyah === ayahIndex ? 'stop' : 'play-arrow'}
-                      size={22}
-                      color="#bfa76f"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.audioButton, { backgroundColor: '#e0cfa9', paddingHorizontal: 8, marginRight: 8 }]}
-                    onPress={() => handleRestartAudio(ayahIndex)}
-                  >
-                    <MaterialIcons name="replay" size={20} color="#7c5c1e" />
-                  </TouchableOpacity>
-                  <Text style={{ fontSize: 15, color: '#7c5c1e', fontFamily: 'UthmaniFull', minWidth: 60 }}>
-                    {positionSec} / {durationSec > 0 ? durationSec : 0}s
-                  </Text>
-                </View>
-                <Slider
-                  style={{ width: sliderWidth, height: 32, alignSelf: 'center' }}
-                  minimumValue={0}
-                  maximumValue={durationSec > 0 ? durationSec : 1}
-                  value={positionSec}
-                  minimumTrackTintColor="#bfa76f"
-                  maximumTrackTintColor="#e0cfa9"
-                  thumbTintColor="#bfa76f"
-                  thumbStyle={{ height: 22, width: 22, borderRadius: 11, shadowColor: '#bfa76f', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4 }}
-                  trackStyle={{ height: 7, borderRadius: 4 }}
-                  onSlidingComplete={handleSeek}
-                  disabled={durationSec === 0}
-                />
-              </View>
-            );
-          })}
+          <SurahAudioList
+            ayahs={currentAyahs}
+            currentPage={currentPage}
+            playingAyah={playingAyah}
+            timer={timer}
+            lastPositions={lastPositions}
+            playbackStatus={playbackStatus}
+            onPlay={handlePlayAudio}
+            onStop={handleStopAudio}
+            onRestart={handleRestartAudio}
+            sound={sound}
+            styles={styles}
+          />
         </ScrollView>
-
         {showPagination && (
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              style={[
-                styles.arrowButton,
-                currentPage === totalPages - 1 && styles.arrowButtonDisabled,
-              ]}
-              onPress={goToNextPage}
-              disabled={currentPage === totalPages - 1}
-            >
-              <Text
-                style={[
-                  styles.arrowText,
-                  currentPage === totalPages - 1 && styles.arrowTextDisabled,
-                ]}
-              >
-                ←
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.pageInfoContainer}>
-              <Text style={styles.pageInfoText}>
-                {currentPage + 1} من {totalPages}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.arrowButton,
-                currentPage === 0 && styles.arrowButtonDisabled,
-              ]}
-              onPress={goToPrevPage}
-              disabled={currentPage === 0}
-            >
-              <Text
-                style={[
-                  styles.arrowText,
-                  currentPage === 0 && styles.arrowTextDisabled,
-                ]}
-              >
-                →
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <AudioSurahPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onNext={goToNextPage}
+            onPrev={goToPrevPage}
+            styles={styles}
+          />
         )}
       </View>
     </SafeAreaView>

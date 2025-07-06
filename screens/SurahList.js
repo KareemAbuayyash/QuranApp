@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,27 +6,53 @@ import {
   FlatList,
   SafeAreaView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
-import surahList from '../assets/quran/surah-list.json';
+import surahList from '../assets/source/surah.json';
 import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
-import surahJsonFiles from '../assets/source/surahJsonFiles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import normalizeArabic from '../components/normalizeArabic';
+import normalizeEnglish from '../components/normalizeEnglish';
 
 export default function SurahList({ navigation }) {
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Filter surah list by search text
+  useEffect(() => {
+    // Simulate loading time for surah list data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 seconds loading time
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Filter surah list by search text using improved normalization logic
   const filteredSurahList = useMemo(() => {
-    const text = searchText.trim().toLowerCase();
+    const text = searchText.trim();
     if (!text) return surahList;
+    const normalizedArabicSearch = normalizeArabic(text);
+    const normalizedEnglishSearch = normalizeEnglish(text);
     return surahList.filter(item =>
-      normalizeArabic(item.name.toLowerCase()).includes(normalizeArabic(text)) ||
-      item.englishName.toLowerCase().includes(text) ||
-      item.number.toString().includes(text)
+      (normalizedArabicSearch && normalizeArabic(item.titleAr).includes(normalizedArabicSearch)) ||
+      (normalizedEnglishSearch && normalizeEnglish(item.title).includes(normalizedEnglishSearch)) ||
+      item.index.includes(text) ||
+      parseInt(item.index, 10).toString().includes(text)
     );
   }, [searchText]);
+
+  // Show loading screen
+  if (loading) {
+    return (
+      <View style={surahListStyles.loadingContainer}>
+        <View style={surahListStyles.loadingContent}>
+          <ActivityIndicator size="large" color="#bfa76f" />
+          <Text style={surahListStyles.loadingText}>جاري تحميل قائمة السور...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={surahListStyles.safeArea}>
@@ -53,21 +79,22 @@ export default function SurahList({ navigation }) {
         />
         <FlatList
           data={filteredSurahList}
-          keyExtractor={item => item.number.toString()}
+          keyExtractor={item => parseInt(item.index, 10).toString()}
           contentContainerStyle={surahListStyles.listContent}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.surahItem}
               onPress={() => {
-                navigation.navigate('SurahScreen', { number: item.number.toString() });
+                navigation.navigate('SurahScreen', { number: parseInt(item.index, 10).toString() });
               }}
             >
-              <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {item.number}. {item.name} ({item.englishName}) </Text>
+              <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {parseInt(item.index, 10)}. {item.titleAr} ({item.title}) </Text>
               <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
-                {revelationTypeMap[item.number.toString()] 
-                  ? `(${revelationTypeMap[item.number.toString()]})` 
+                {revelationTypeMap[parseInt(item.index, 10).toString()]
+                  ? `(${revelationTypeMap[parseInt(item.index, 10).toString()]})`
                   : ''}
               </Text>
+              <Text style={{ fontSize: 14, color: '#bfa76f' }}>عدد الآيات: {item.count}</Text>
             </TouchableOpacity>
           )}
         />

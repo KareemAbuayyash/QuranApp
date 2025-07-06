@@ -8,7 +8,8 @@ import SurahScreen    from './screens/SurahScreen';
 import SearchScreen   from './screens/SearchScreen';
 import AudioSurahList from './screens/AudioSurahList';
 import { useFonts }   from 'expo-font';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,34 +28,45 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SurahList"
-          component={SurahList}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SurahScreen"
-          component={SurahScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SearchScreen"
-          component={SearchScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AudioSurahList"
-          component={AudioSurahList}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Home">
+            <Stack.Screen 
+              name="Home" 
+              component={HomeScreen} 
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SurahList"
+              component={SurahList}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SurahScreen"
+              component={SurahScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SearchScreen"
+              component={SearchScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AudioSurahList"
+              component={AudioSurahList}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f7ecd7', // or your app background
+  },
+});
