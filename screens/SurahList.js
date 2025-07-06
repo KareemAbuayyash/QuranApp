@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   SafeAreaView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import surahList from '../assets/source/surah.json';
 import surahListStyles from '../styles/SurahListStyles';
@@ -16,6 +17,16 @@ import normalizeEnglish from '../components/normalizeEnglish';
 
 export default function SurahList({ navigation }) {
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for surah list data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 seconds loading time
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Filter surah list by search text using improved normalization logic
   const filteredSurahList = useMemo(() => {
@@ -30,6 +41,18 @@ export default function SurahList({ navigation }) {
       parseInt(item.index, 10).toString().includes(text)
     );
   }, [searchText]);
+
+  // Show loading screen
+  if (loading) {
+    return (
+      <View style={surahListStyles.loadingContainer}>
+        <View style={surahListStyles.loadingContent}>
+          <ActivityIndicator size="large" color="#bfa76f" />
+          <Text style={surahListStyles.loadingText}>جاري تحميل قائمة السور...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={surahListStyles.safeArea}>

@@ -8,26 +8,44 @@ import * as Asset from 'expo-asset';
 
 export default function HomeScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showSource, setShowSource] = useState(false);
   const [surahData, setSurahData] = useState(null);
   const [audioFiles, setAudioFiles] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1200,
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true,
-    }).start();
+    // Initial loading sequence
+    const initializeApp = async () => {
+      try {
+        // Simulate app initialization tasks
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Load any necessary assets or data here
+        // For example, preload fonts, check file system, etc.
+        
+        setIsInitialized(true);
+        setLoading(false);
+        
+        // Start the fade animation after loading is complete
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.out(Easing.exp),
+          useNativeDriver: true,
+        }).start();
+      } catch (error) {
+        console.error('Error initializing app:', error);
+        setIsInitialized(true);
+        setLoading(false);
+      }
+    };
+
+    initializeApp();
   }, [fadeAnim]);
 
   const handleNavigate = (screen) => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigation.navigate(screen);
-    }, 1000);
+    navigation.navigate(screen);
   };
 
   const handleShowSource = async () => {
@@ -52,6 +70,29 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  // Show initial loading screen
+  if (!isInitialized) {
+    return (
+      <SafeAreaView style={homeScreenStyles.safeArea}>
+        <LinearGradient
+          colors={["#fdf6ec", "#f8ecd4", "#e0cfa9"]}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+        <View style={homeScreenStyles.initialLoadingContainer}>
+          <View style={homeScreenStyles.logoGlowContainer}>
+            <View style={homeScreenStyles.logoGlow} />
+            <Image source={require('../assets/quran.png')} style={homeScreenStyles.logo} />
+          </View>
+          <Text style={homeScreenStyles.loadingTitle}>تطبيق القرآن</Text>
+          <ActivityIndicator size="large" color="#bfa76f" style={{ marginTop: 30 }} />
+          <Text style={homeScreenStyles.loadingSubtitle}>جاري تحميل التطبيق...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={homeScreenStyles.safeArea}>
       <LinearGradient
@@ -72,15 +113,15 @@ export default function HomeScreen({ navigation }) {
           <Text style={homeScreenStyles.dividerIcon}>★</Text>
           <View style={homeScreenStyles.decorativeDivider} />
         </View>
-        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('SurahList')} activeOpacity={0.85} disabled={loading}>
+        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('SurahList')} activeOpacity={0.85}>
           <Text style={homeScreenStyles.buttonIcon}>📖</Text>
           <Text style={homeScreenStyles.buttonText}>الفهرس</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('SearchScreen')} activeOpacity={0.85} disabled={loading}>
+        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('SearchScreen')} activeOpacity={0.85}>
           <Text style={homeScreenStyles.buttonIcon}>🔍</Text>
           <Text style={homeScreenStyles.buttonText}>البحث عن آية وتفسيرها</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={homeScreenStyles.button} onPress={() => navigation.navigate('AudioSurahList')} activeOpacity={0.85}>
+        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('AudioSurahList')} activeOpacity={0.85}>
           <Text style={homeScreenStyles.buttonIcon}>🎵</Text>
           <Text style={homeScreenStyles.buttonText}>عرض السور والصوتيات</Text>
         </TouchableOpacity>
@@ -99,12 +140,6 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
         <Text style={homeScreenStyles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
-        {loading && (
-          <View style={homeScreenStyles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#bfa76f" />
-            <Text style={homeScreenStyles.loadingText}>جاري التحميل...</Text>
-          </View>
-        )}
       </View>
     </SafeAreaView>
   );

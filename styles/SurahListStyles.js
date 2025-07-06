@@ -5,6 +5,25 @@ const surahListStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fdf6ec',
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#fdf6ec',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 18,
+    color: '#7c5c1e',
+    fontFamily: 'Cochin',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   pageBackground: {
     flex: 1,
     backgroundColor: '#fdf6ec',
@@ -137,13 +156,6 @@ const surahListStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-  },
-  loadingText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#7c5c1e',
-    fontFamily: 'Cochin',
-    fontWeight: 'bold',
   },
   scrollToTopButton: {
     position: 'absolute',

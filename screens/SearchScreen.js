@@ -13,7 +13,7 @@ import {
   SafeAreaView,
   Modal,
   FlatList,
-  Share
+  Share,
 } from 'react-native';
 import surahs from '../assets/quran/surahs';
 import surahList from '../assets/quran/surah-list.json';

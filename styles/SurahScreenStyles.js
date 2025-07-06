@@ -11,6 +11,33 @@ const surahScreenStyles = StyleSheet.create({
     fontSize: 18,
     color: '#666',
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#fdf6ec',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 18,
+    color: '#7c5c1e',
+    fontFamily: 'Cochin',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  loadingSurahName: {
+    marginTop: 10,
+    fontSize: 24,
+    color: '#bfa76f',
+    fontFamily: 'Cochin',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   pageBackground: {
     flex: 1,
     backgroundColor: '#fdf6ec',

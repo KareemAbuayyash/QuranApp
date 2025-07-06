@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image, ActivityIndicator } from 'react-native';
 import { Audio } from 'expo-av';
 import surahJsonFiles from '../assets/source/surahJsonFiles';
 import audioFiles from '../assets/source/audioFiles';
@@ -23,6 +23,16 @@ export default function SurahScreen({ route, navigation }) {
   const playAllRef = useRef(false);
   const [lastPlayedAyahIdx, setLastPlayedAyahIdx] = useState(null);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for surah data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 seconds loading time
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Extract ayahs as an array from the 'verse' object
   const ayahs = useMemo(() => {
@@ -68,12 +78,27 @@ export default function SurahScreen({ route, navigation }) {
   }, [sound]);
 
   useEffect(() => {
-    if (autoPlay) {
+    if (autoPlay && !loading) {
       setCurrentPage(0);
       setLastPlayedAyahIdx(null);
       setTimeout(() => playAllAyahs(true), 100);
     }
-  }, [autoPlay]);
+  }, [autoPlay, loading]);
+
+  // Show loading screen
+  if (loading) {
+    return (
+      <View style={surahScreenStyles.loadingContainer}>
+        <View style={surahScreenStyles.loadingContent}>
+          <ActivityIndicator size="large" color="#bfa76f" />
+          <Text style={surahScreenStyles.loadingText}>جاري تحميل السورة...</Text>
+          {surah && (
+            <Text style={surahScreenStyles.loadingSurahName}>{surah.name}</Text>
+          )}
+        </View>
+      </View>
+    );
+  }
 
   if (!surah) {
     return <Text style={surahScreenStyles.loading}>لم أجد بيانات السورة #{number}</Text>;

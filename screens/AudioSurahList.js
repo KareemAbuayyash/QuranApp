@@ -1,5 +1,5 @@
 // screens/AudioSurahList.js
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Dimensions,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import surahList from '../assets/source/surah.json';
@@ -39,6 +40,16 @@ export default function AudioSurahList({ navigation }) {
   const [playbackStatus, setPlaybackStatus] = useState({}); // ayahIndex: { positionMillis, durationMillis }
   const [timer, setTimer] = useState(0);
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for audio surah list data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 seconds loading time
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Filter surah list using normalization
   const filteredSurahList = useMemo(() => {
@@ -167,6 +178,18 @@ export default function AudioSurahList({ navigation }) {
       }, 0);
     }
   };
+
+  // Show loading screen
+  if (loading) {
+    return (
+      <View style={surahListStyles.loadingContainer}>
+        <View style={surahListStyles.loadingContent}>
+          <ActivityIndicator size="large" color="#bfa76f" />
+          <Text style={surahListStyles.loadingText}>جاري تحميل السور الصوتية...</Text>
+        </View>
+      </View>
+    );
+  }
 
   // إذا لم يتم اختيار سورة بعد
   if (!selectedSurah) {
