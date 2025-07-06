@@ -40,6 +40,20 @@ export default function AudioSurahList({ navigation }) {
   const [timer, setTimer] = useState(0);
   const [searchText, setSearchText] = useState('');
 
+  // Filter surah list using normalization
+  const filteredSurahList = useMemo(() => {
+    const text = searchText.trim();
+    if (!text) return surahList;
+    const normalizedArabicSearch = normalizeArabic(text);
+    const normalizedEnglishSearch = normalizeEnglish(text);
+    return surahList.filter(item =>
+      (normalizedArabicSearch && normalizeArabic(item.titleAr).includes(normalizedArabicSearch)) ||
+      (normalizedEnglishSearch && normalizeEnglish(item.title).includes(normalizedEnglishSearch)) ||
+      item.index.includes(text) ||
+      parseInt(item.index, 10).toString().includes(text)
+    );
+  }, [searchText, surahList]);
+
   // تقسيم الآيات إلى صفحات
   const pages = useMemo(() => {
     if (!selectedSurah || !selectedSurah.verse) return [];
@@ -166,7 +180,7 @@ export default function AudioSurahList({ navigation }) {
             revelationType={null}
           />
           <AudioSurahListSearchList
-            surahList={surahList}
+            surahList={filteredSurahList}
             searchText={searchText}
             setSearchText={setSearchText}
             onSurahPress={item => {
