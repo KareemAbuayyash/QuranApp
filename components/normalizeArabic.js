@@ -3,11 +3,12 @@
 export default function normalizeArabic(text) {
   if (!text) return '';
   return text
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/ة/g, 'ه')
-    .replace(/[ى]/g, 'ي')
+    .replace(/[أإآ]/g, 'ا')  // Normalize alef variations
+    .replace(/ة/g, 'ه')      // Normalize taa marbouta to haa
+    .replace(/[ى]/g, 'ي')    // Normalize alif maqsura to yaa
     .replace(/[ًٌٍَُِّْ]/g, '') // Remove harakat/diacritics
-    .replace(/ء/g, '') // Optionally remove hamza
-    .replace(/-/g, '') // Remove dashes
-    .replace(/\s+/g, ''); // Remove extra spaces
+    .replace(/ء/g, '')       // Remove hamza
+    .replace(/\s+/g, ' ')    // Normalize spaces (keep single spaces)
+    .trim()                  // Remove leading/trailing spaces
+    .toLowerCase();          // Convert to lowercase for case-insensitive search
 } 

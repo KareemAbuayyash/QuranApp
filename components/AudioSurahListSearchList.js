@@ -7,13 +7,34 @@ import normalizeEnglish from '../components/normalizeEnglish';
 
 const AudioSurahListSearchList = ({ surahList, searchText, setSearchText, onSurahPress, revelationTypeMap }) => {
   const filteredSurahList = useMemo(() => {
-    const text = searchText.trim().toLowerCase();
+    const text = searchText.trim();
     if (!text) return surahList;
-    return surahList.filter(item =>
-      normalizeArabic(item.titleAr).includes(normalizeArabic(text)) ||
-      normalizeEnglish(item.title).includes(normalizeEnglish(text)) ||
-      parseInt(item.index, 10).toString().includes(text)
-    );
+
+    const filtered = surahList.filter(item => {
+      // Normalize search text
+      const normalizedSearchText = text.toLowerCase();
+
+      // Arabic
+      const normalizedArabicTitle = normalizeArabic(item.titleAr);
+      const normalizedArabicSearch = normalizeArabic(text);
+      const arabicMatch = normalizedArabicSearch
+        ? normalizedArabicTitle.includes(normalizedArabicSearch) || item.titleAr.toLowerCase().includes(normalizedSearchText)
+        : false;
+
+      // English
+      const normalizedEnglishTitle = normalizeEnglish(item.title);
+      const normalizedEnglishSearch = normalizeEnglish(text);
+      const englishMatch = normalizedEnglishSearch
+        ? normalizedEnglishTitle.includes(normalizedEnglishSearch) || item.title.toLowerCase().includes(normalizedSearchText)
+        : false;
+
+      // Index
+      const indexMatch = item.index.includes(text) || parseInt(item.index, 10).toString().includes(text);
+
+      return arabicMatch || englishMatch || indexMatch;
+    });
+
+    return filtered;
   }, [searchText, surahList]);
 
   return (
