@@ -18,6 +18,7 @@ import styles from '../styles/AudioSurahListStyles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
 import normalizeArabic from '../components/normalizeArabic';
 import normalizeEnglish from '../components/normalizeEnglish';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SurahList({ navigation }) {
   const [searchText, setSearchText] = useState('');
@@ -96,7 +97,26 @@ export default function SurahList({ navigation }) {
           <View style={surahListStyles.fullWidthSurahNameContainer}>
             <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سور القرآن</Text>
           </View>
-          <View style={{ width: 40 }} />
+          <TouchableOpacity
+            style={{ padding: 8, backgroundColor: '#bfa76f', borderRadius: 8 }}
+            onPress={async () => {
+              // جلب آخر إشارة حفظ
+              const keys = await AsyncStorage.getAllKeys();
+              const savedKey = keys.find(k => k.startsWith('savedPage-surah-'));
+              if (!savedKey) {
+                alert('لا يوجد صفحة محفوظة');
+                return;
+              }
+              const savedPage = await AsyncStorage.getItem(savedKey);
+              const surahNum = savedKey.replace('savedPage-surah-', '');
+              navigation.navigate('SurahScreen', {
+                number: surahNum,
+                savedPage: parseInt(savedPage, 10)
+              });
+            }}
+          >
+            <Ionicons name="bookmark" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
         <TextInput
           style={surahListStyles.searchBar}

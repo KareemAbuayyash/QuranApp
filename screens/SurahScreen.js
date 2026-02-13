@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import surahJsonFiles from '../assets/source/surahJsonFiles';
 import audioFiles from '../assets/source/audioFiles';
@@ -14,10 +15,13 @@ const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
 
 export default function SurahScreen({ route, navigation }) {
-  const { number, autoPlay, scrollToVerse } = route.params || {};
+  const { number, autoPlay, scrollToVerse, savedPage } = route.params || {};
   const surah = surahJsonFiles[number];
   // إذا تم تمرير scrollToVerse، احسب الصفحة التي تحتوي على هذه الآية
   const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof savedPage === 'number' && !isNaN(savedPage)) {
+      return savedPage;
+    }
     if (scrollToVerse && surahJsonFiles[number] && surahJsonFiles[number].verse) {
       const ayahKeys = Object.keys(surahJsonFiles[number].verse)
         .sort((a, b) => parseInt(a.replace('verse_', '')) - parseInt(b.replace('verse_', '')));
@@ -26,6 +30,47 @@ export default function SurahScreen({ route, navigation }) {
     }
     return 0;
   });
+    // حفظ الصفحة الحالية
+    const saveCurrentPage = async () => {
+      if (typeof window !== 'undefined' && window.confirm) {
+        // للويب فقط
+        if (!window.confirm('هل تريد وضع علامة عند هذه الصفحة؟')) return;
+      } else {
+        // للهواتف: استخدم Alert من react-native
+        return new Promise((resolve) => {
+          import('react-native').then(({ Alert }) => {
+            Alert.alert(
+              'تأكيد',
+              'هل تريد وضع علامة عند هذه الصفحة؟',
+              [
+                { text: 'لا', style: 'cancel', onPress: () => resolve(false) },
+                { text: 'نعم', onPress: () => resolve(true) }
+              ],
+              { cancelable: true }
+            );
+          });
+        }).then(async (confirmed) => {
+          if (!confirmed) return;
+          try {
+            await AsyncStorage.setItem(`savedPage-surah-${number}`, currentPage.toString());
+            import('react-native').then(({ Alert }) => {
+              Alert.alert('تم الحفظ', 'تم حفظ الصفحة بنجاح!');
+            });
+          } catch (e) {
+            import('react-native').then(({ Alert }) => {
+              Alert.alert('خطأ', 'حدث خطأ أثناء الحفظ');
+            });
+          }
+        });
+        return;
+      }
+      try {
+        await AsyncStorage.setItem(`savedPage-surah-${number}`, currentPage.toString());
+        alert('تم حفظ الصفحة بنجاح!');
+      } catch (e) {
+        alert('حدث خطأ أثناء الحفظ');
+      }
+    };
     // Scroll تلقائي للآية المطلوبة عند أول تحميل
     useEffect(() => {
       if (scrollToVerse && scrollViewRef.current && ayahs.length) {
@@ -321,6 +366,7 @@ export default function SurahScreen({ route, navigation }) {
           isPlayingAll={isPlayingAll}
           onRestart={handleRestart}
           restartDisabled={isRestarting}
+          onSave={saveCurrentPage}
         />
         <ScrollView 
           ref={scrollViewRef}

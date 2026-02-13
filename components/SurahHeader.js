@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import surahScreenStyles from '../styles/SurahScreenStyles';
 
-const SurahHeader = ({ surahName, onBack, onPlayAll, isPlayingAll, onRestart, restartDisabled }) => (
+const SurahHeader = ({ surahName, onBack, onPlayAll, isPlayingAll, onRestart, restartDisabled, onSave }) => (
   <View style={surahScreenStyles.surahBanner}>
     <TouchableOpacity 
       onPress={onBack} 
@@ -39,8 +39,15 @@ const SurahHeader = ({ surahName, onBack, onPlayAll, isPlayingAll, onRestart, re
           color={restartDisabled ? '#ccc' : '#7c5c1e'} 
         />
       </TouchableOpacity>
+      <TouchableOpacity
+        onPress={onSave}
+        style={surahScreenStyles.headerActionButton}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons name="bookmark" size={28} color="#bfa76f" />
+      </TouchableOpacity>
     </View>
   </View>
 );
 
-export default SurahHeader; 
+export default SurahHeader;
