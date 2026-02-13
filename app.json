@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "القراَن الكريم",
-    "slug": "القراَن الكريم",
+    "slug": "quran-kareem-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/quran.png",
+    "icon": "./assets/quran.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,13 +17,19 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/quran.png",
+        "foregroundImage": "./assets/quran.jpg",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.kareemabuayyash.qurankareemapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ec0f3f93-8401-4883-99b9-cc92aba6537f"
+      }
     }
   }
 }

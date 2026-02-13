@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import surahList from '../assets/source/surah.json';
 import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
@@ -61,12 +62,14 @@ export default function SurahList({ navigation }) {
           <TouchableOpacity
             onPress={() => navigation.goBack?.()}
             style={surahListStyles.fullWidthBackButton}
+            activeOpacity={0.7}
           >
-            <Text style={surahListStyles.backArrow}>←</Text>
+            <Ionicons name="arrow-back" size={24} color="#7c5c1e" />
           </TouchableOpacity>
           <View style={surahListStyles.fullWidthSurahNameContainer}>
             <Text style={[surahListStyles.surahNameHeader, { fontFamily: 'UthmaniFull' }]}>سور القرآن</Text>
           </View>
+          <View style={{ width: 40 }} />
         </View>
         <TextInput
           style={surahListStyles.searchBar}

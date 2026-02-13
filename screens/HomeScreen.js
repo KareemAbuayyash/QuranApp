@@ -83,7 +83,7 @@ export default function HomeScreen({ navigation }) {
         <View style={homeScreenStyles.initialLoadingContainer}>
           <View style={homeScreenStyles.logoGlowContainer}>
             <View style={homeScreenStyles.logoGlow} />
-            <Image source={require('../assets/quran.png')} style={homeScreenStyles.logo} />
+            <Image source={require('../assets/quran.jpg')} style={homeScreenStyles.logo} />
           </View>
           <Text style={homeScreenStyles.loadingTitle}>تطبيق القرآن</Text>
           <ActivityIndicator size="large" color="#bfa76f" style={{ marginTop: 30 }} />
@@ -104,7 +104,7 @@ export default function HomeScreen({ navigation }) {
       <View style={homeScreenStyles.card}>
         <View style={homeScreenStyles.logoGlowContainer}>
           <View style={homeScreenStyles.logoGlow} />
-          <Image source={require('../assets/quran.png')} style={homeScreenStyles.logo} />
+          <Image source={require('../assets/quran.jpg')} style={homeScreenStyles.logo} />
         </View>
         <Animated.Text style={[homeScreenStyles.headline, { opacity: fadeAnim }]}>مرحبًا بك في تطبيق القرآن</Animated.Text>
         <Text style={homeScreenStyles.subtitle}>استكشف السور وابحث عن الآيات وتفسيرها بسهولة</Text>

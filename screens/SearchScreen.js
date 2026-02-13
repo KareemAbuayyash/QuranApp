@@ -24,7 +24,7 @@ import normalizeArabicFull from '../components/normalizeArabicFull';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function SearchScreen() {
+export default function SearchScreen({ navigation }) {
   const [surahQuery, setSurahQuery] = useState('');
   const [ayahNumber, setAyahNumber] = useState('');
   const [ayahTextQuery, setAyahTextQuery] = useState(''); // New field for text search
@@ -258,13 +258,20 @@ export default function SearchScreen() {
           <View style={searchScreenStyles.container}>
             <View style={searchScreenStyles.card}>
               <View style={searchScreenStyles.header}>
+                <TouchableOpacity 
+                  style={searchScreenStyles.backButton} 
+                  onPress={() => navigation.goBack()}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="arrow-back" size={22} color="#7c5c1e" />
+                </TouchableOpacity>
                 <Text style={searchScreenStyles.title}>بحث عن آية</Text>
                 <TouchableOpacity 
                   style={searchScreenStyles.clearButton} 
                   onPress={clearSearch}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="refresh-outline" size={20} color="#bfa76f" />
+                  <Ionicons name="refresh-outline" size={22} color="#bfa76f" />
                 </TouchableOpacity>
               </View>
 

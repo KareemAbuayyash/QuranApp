@@ -47,6 +47,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontWeight: 'bold',
   },
+  ayahCountSubtitle: {
+    fontSize: 14,
+    color: '#7c5c1e',
+    textAlign: 'center',
+    marginTop: 4,
+    opacity: 0.85,
+  },
   ayahCard: {
     backgroundColor: '#fff9ef',
     borderRadius: 16,

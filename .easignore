@@ -1,0 +1,14 @@
+# استبعاد ملفات Git
+.git
+.gitignore
+
+# استبعاد node_modules (سيتم تثبيتها على السيرفر)
+node_modules
+
+# استبعاد ملفات IDE
+.vscode
+.idea
+
+# استبعاد ملفات مؤقتة
+*.log
+.DS_Store
