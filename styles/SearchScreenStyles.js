@@ -465,6 +465,36 @@ const searchScreenStyles = StyleSheet.create({
     flex: 1,
     lineHeight: 32,
   },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8ecd4',
+    borderRadius: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1.5,
+    borderColor: '#bfa76f',
+    shadowColor: '#bfa76f',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+    minWidth: 100,
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: '#7c5c1e',
+    fontSize: 15,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif',
+  },
 });
 
 export default searchScreenStyles; 

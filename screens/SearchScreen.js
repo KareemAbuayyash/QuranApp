@@ -19,8 +19,10 @@ import surahs from '../assets/quran/surahs';
 import surahList from '../assets/quran/surah-list.json';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import searchScreenStyles from '../styles/SearchScreenStyles';
 import normalizeArabicFull from '../components/normalizeArabicFull';
+import TafsirModal from '../components/TafsirModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -37,6 +39,8 @@ export default function SearchScreen({ navigation }) {
   const [selectedSurahObj, setSelectedSurahObj] = useState(null);
   const [ayahModalSearch, setAyahModalSearch] = useState('');
   const [searchMode, setSearchMode] = useState('specific'); // 'specific' or 'text'
+  const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
+  const [selectedAyahForTafsir, setSelectedAyahForTafsir] = useState(null);
 
   // Filter surahs for modal search
   const filteredSurahs = useMemo(() => {
@@ -226,14 +230,31 @@ export default function SearchScreen({ navigation }) {
           <Text style={searchScreenStyles.resultTafsir}>{ayahData.tafsir}</Text>
         </View>
       )}
-      <TouchableOpacity 
-        style={searchScreenStyles.shareButton} 
-        onPress={() => handleShare(ayahData)} 
-        activeOpacity={0.8}
-      >
-        <Ionicons name="share-social-outline" size={18} color="#7c5c1e" style={{ marginLeft: 6 }} />
-        <Text style={searchScreenStyles.shareButtonText}>مشاركة الآية</Text>
-      </TouchableOpacity>
+      <View style={searchScreenStyles.actionButtonsContainer}>
+        <TouchableOpacity 
+          style={searchScreenStyles.actionButton} 
+          onPress={() => {
+            setSelectedAyahForTafsir({
+              number: ayahData.number,
+              text: ayahData.text,
+              surahNumber: ayahData.surahNumber
+            });
+            setTafsirModalVisible(true);
+          }} 
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name="menu-book" size={18} color="#7c5c1e" style={{ marginLeft: 6 }} />
+          <Text style={searchScreenStyles.actionButtonText}>التفسير</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={searchScreenStyles.actionButton} 
+          onPress={() => handleShare(ayahData)} 
+          activeOpacity={0.8}
+        >
+          <Ionicons name="share-social-outline" size={18} color="#7c5c1e" style={{ marginLeft: 6 }} />
+          <Text style={searchScreenStyles.actionButtonText}>مشاركة</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -370,12 +391,7 @@ export default function SearchScreen({ navigation }) {
                   <Text style={searchScreenStyles.resultsHeader}>
                     تم العثور على {results.length} آية
                   </Text>
-                  {results.slice(0, 10).map((ayahData, index) => renderAyahResult(ayahData, index))}
-                  {results.length > 10 && (
-                    <Text style={searchScreenStyles.moreResultsText}>
-                      وعدد {results.length - 10} آية أخرى...
-                    </Text>
-                  )}
+                  {results.map((ayahData, index) => renderAyahResult(ayahData, index))}
                 </View>
               )}
 
@@ -477,6 +493,14 @@ export default function SearchScreen({ navigation }) {
           />
         </View>
       </Modal>
+
+      <TafsirModal
+        visible={tafsirModalVisible}
+        onClose={() => setTafsirModalVisible(false)}
+        surahNumber={selectedAyahForTafsir?.surahNumber}
+        ayahNumber={selectedAyahForTafsir?.number}
+        ayahText={selectedAyahForTafsir?.text}
+      />
     </SafeAreaView>
   );
 }

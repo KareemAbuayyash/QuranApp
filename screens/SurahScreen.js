@@ -8,6 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import SurahHeader from '../components/SurahHeader';
 import AyahList from '../components/AyahList';
 import PaginationControls from '../components/PaginationControls';
+import TafsirModal from '../components/TafsirModal';
 
 const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
@@ -24,6 +25,8 @@ export default function SurahScreen({ route, navigation }) {
   const [lastPlayedAyahIdx, setLastPlayedAyahIdx] = useState(null);
   const [isRestarting, setIsRestarting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
+  const [selectedAyahForTafsir, setSelectedAyahForTafsir] = useState(null);
 
   useEffect(() => {
     // Simulate loading time for surah data
@@ -43,11 +46,15 @@ export default function SurahScreen({ route, navigation }) {
         const numB = parseInt(b.replace('verse_', ''));
         return numA - numB;
       })
-      .map((key, idx) => ({
-        number: idx + 1,
-        text: surah.verse[key],
-        audioIndex: idx, // index for audio file
-      }));
+      .map((key, idx) => {
+        const verseNumber = parseInt(key.replace('verse_', ''));
+        return {
+          number: idx + 1,
+          text: surah.verse[key],
+          audioIndex: idx, // index for audio file
+          verseKey: verseNumber, // الرقم الأصلي من verse_X - للـ API
+        };
+      });
   }, [surah]);
 
   // Split ayahs into pages
@@ -262,6 +269,20 @@ export default function SurahScreen({ route, navigation }) {
     }, 100);
   };
 
+  const handleShowTafsir = (ayah) => {
+    // لا تفتح التفسير للبسملة (verse_0)
+    if (ayah.verseKey === 0) {
+      return;
+    }
+    setSelectedAyahForTafsir(ayah);
+    setTafsirModalVisible(true);
+  };
+
+  const handleCloseTafsir = () => {
+    setTafsirModalVisible(false);
+    setSelectedAyahForTafsir(null);
+  };
+
   return (
     <View style={surahScreenStyles.container}>
       <View style={surahScreenStyles.pageBackground}>
@@ -289,6 +310,7 @@ export default function SurahScreen({ route, navigation }) {
             isPlayingAll={isPlayingAll}
             onPlayAyah={handlePlayAudio}
             onStopAyah={handleStopAudio}
+            onShowTafsir={handleShowTafsir}
           />
         </ScrollView>
         {showPagination && (
@@ -300,6 +322,14 @@ export default function SurahScreen({ route, navigation }) {
           />
         )}
       </View>
+      
+      <TafsirModal
+        visible={tafsirModalVisible}
+        onClose={handleCloseTafsir}
+        surahNumber={number}
+        ayahNumber={selectedAyahForTafsir?.verseKey || selectedAyahForTafsir?.number}
+        ayahText={selectedAyahForTafsir?.text}
+      />
     </View>
   );
 }
