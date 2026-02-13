@@ -27,18 +27,20 @@ import TafsirModal from '../components/TafsirModal';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function SearchScreen({ navigation }) {
+  const scrollViewRef = useRef(null);
+  const resultsYRef = useRef(0);
+  const [shouldScrollToResults, setShouldScrollToResults] = useState(false);
   const [surahQuery, setSurahQuery] = useState('');
   const [ayahNumber, setAyahNumber] = useState('');
-  const [ayahTextQuery, setAyahTextQuery] = useState(''); // New field for text search
-  const [result, setResult] = useState(null);
-  const [results, setResults] = useState([]); // For multiple results when searching by text
+  const [ayahTextQuery, setAyahTextQuery] = useState('');
+  const [results, setResults] = useState([]);
   const [error, setError] = useState('');
   const [showSurahModal, setShowSurahModal] = useState(false);
   const [showAyahModal, setShowAyahModal] = useState(false);
   const [modalSurahSearch, setModalSurahSearch] = useState('');
   const [selectedSurahObj, setSelectedSurahObj] = useState(null);
   const [ayahModalSearch, setAyahModalSearch] = useState('');
-  const [searchMode, setSearchMode] = useState('specific'); // 'specific' or 'text'
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
   const [selectedAyahForTafsir, setSelectedAyahForTafsir] = useState(null);
 
@@ -102,85 +104,76 @@ export default function SearchScreen({ navigation }) {
 
   const handleSearch = () => {
     setError('');
-    setResult(null);
     setResults([]);
 
-    // If searching by text
-    if (searchMode === 'text' && ayahTextQuery.trim()) {
-      const query = ayahTextQuery.trim();
-      const normalizedQuery = normalizeArabicFull(query);
-      const foundResults = [];
+    const query = ayahTextQuery.trim();
+    const hasSurah = selectedSurahObj !== null;
+    const hasAyah = ayahNumber && ayahNumber !== '';
 
-      // If query is too short, require at least 2 characters
+    // إذا لم يوجد نص بحث ولم يتم اختيار سورة أو آية، أظهر الخطأ
+    if (!query && !hasSurah && !hasAyah) {
+      setError('يرجى إدخال نص للبحث أو تحديد السورة/الآية.');
+      return;
+    }
+
+    // إذا يوجد نص بحث، طبّق شرط الطول
+    let normalizedQuery = '';
+    if (query) {
+      normalizedQuery = normalizeArabicFull(query);
       if (normalizedQuery.length < 2) {
         setError('يرجى إدخال كلمة أطول للبحث (حرفين على الأقل).');
         return;
       }
+    }
 
-      // Search through all surahs
-      Object.keys(surahs).forEach(surahNum => {
-        const surah = surahs[surahNum];
-        if (surah && surah.ayahs) {
-          surah.ayahs.forEach(ayah => {
-            if (ayah.text) {
-              const normalizedAyahText = normalizeArabicFull(ayah.text);
-              
-              // Check if the normalized query exists in the normalized ayah text
-              if (normalizedAyahText.includes(normalizedQuery)) {
-                foundResults.push({
-                  ...ayah,
-                  surahName: surah.name,
-                  surahNumber: surah.number,
-                  // Add highlighting info for display
-                  originalText: ayah.text,
-                  matchedQuery: query
-                });
-              }
+    const foundResults = [];
+    const searchInSurah = selectedSurahObj ? selectedSurahObj.number : null;
+    const searchForAyah = ayahNumber ? parseInt(ayahNumber, 10) : null;
+
+    // Search through all or specific surah
+    const surahsToSearch = searchInSurah ? [searchInSurah] : Object.keys(surahs);
+
+    surahsToSearch.forEach(surahNum => {
+      const surah = surahs[surahNum];
+      if (surah && surah.ayahs) {
+        surah.ayahs.forEach(ayah => {
+          // Filter by ayah number if specified
+          if (searchForAyah && ayah.number !== searchForAyah) return;
+          if (ayah.text) {
+            const normalizedAyahText = normalizeArabicFull(ayah.text);
+            if (normalizedAyahText.includes(normalizedQuery)) {
+              foundResults.push({
+                ...ayah,
+                surahName: surah.name,
+                surahNumber: surah.number,
+                originalText: ayah.text,
+                matchedQuery: query
+              });
             }
-          });
-        }
-      });
-
-      if (foundResults.length === 0) {
-        setError(`لم يتم العثور على آيات تحتوي على "${query}". جرب كلمات أخرى أو تأكد من الإملاء.`);
-        return;
+          }
+        });
       }
+    });
 
-      // Sort results by surah number and ayah number
-      foundResults.sort((a, b) => {
-        if (a.surahNumber !== b.surahNumber) {
-          return a.surahNumber - b.surahNumber;
-        }
-        return a.number - b.number;
-      });
-
-      setResults(foundResults);
+    if (foundResults.length === 0) {
+      let errorMsg = `لم يتم العثور على آيات تحتوي على "${query}"`;
+      if (searchInSurah) errorMsg += ` في سورة ${selectedSurahObj.name}`;
+      if (searchForAyah) errorMsg += ` رقم ${searchForAyah}`;
+      errorMsg += '. جرب كلمات أخرى أو تأكد من الإملاء.';
+      setError(errorMsg);
       return;
     }
 
-    // Original specific search logic
-    let sNum = surahQuery.split(' - ')[0];
-    if (!sNum) sNum = surahQuery;
-    const aNum = parseInt(ayahNumber, 10);
-    
-    if (!sNum || !aNum) {
-      setError('رجاءً أدخل اسم أو رقم السورة ورقم آية صحيحين.');
-      return;
-    }
-    
-    const surah = surahs[sNum];
-    if (!surah) {
-      setError(`السورة غير موجودة.`);
-      return;
-    }
-    
-    const ayah = surah.ayahs.find(a => a.number === aNum);
-    if (!ayah) {
-      setError(`الآية رقم ${aNum} في السورة رقم ${sNum} غير موجودة.`);
-      return;
-    }
-    
-    setResult({ ...ayah, surahName: surah.name, surahNumber: surah.number });
+    // Sort results by surah number and ayah number
+    foundResults.sort((a, b) => {
+      if (a.surahNumber !== b.surahNumber) {
+        return a.surahNumber - b.surahNumber;
+      }
+      return a.number - b.number;
+    });
+
+    setResults(foundResults);
+    setShouldScrollToResults(true);
   };
 
   const clearSearch = () => {
@@ -188,9 +181,9 @@ export default function SearchScreen({ navigation }) {
     setAyahNumber('');
     setAyahTextQuery('');
     setSelectedSurahObj(null);
-    setResult(null);
     setResults([]);
     setError('');
+    setShowAdvancedOptions(false);
   };
 
   const handleShare = async (ayahData) => {
@@ -203,10 +196,12 @@ export default function SearchScreen({ navigation }) {
   };
 
   const isSearchEnabled = () => {
-    if (searchMode === 'text') {
-      return ayahTextQuery.trim().length > 0;
-    }
-    return surahQuery && ayahNumber;
+    // الزر مفعل إذا كان هناك نص بحث أو تم اختيار السورة أو رقم الآية
+    return (
+      ayahTextQuery.trim().length > 0 ||
+      (selectedSurahObj !== null) ||
+      (ayahNumber && ayahNumber !== '')
+    );
   };
 
   const renderAyahResult = (ayahData, index = 0) => (
@@ -272,9 +267,21 @@ export default function SearchScreen({ navigation }) {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView 
+          ref={scrollViewRef}
           contentContainerStyle={searchScreenStyles.scrollContainer} 
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            if (shouldScrollToResults && scrollViewRef.current) {
+              setTimeout(() => {
+                scrollViewRef.current.scrollTo({
+                  y: Math.max(resultsYRef.current - 10, 0),
+                  animated: true,
+                });
+                setShouldScrollToResults(false);
+              }, 50);
+            }
+          }}
         >
           <View style={searchScreenStyles.container}>
             <View style={searchScreenStyles.card}>
@@ -296,32 +303,47 @@ export default function SearchScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
 
-              {/* Search Mode Toggle */}
-              <View style={searchScreenStyles.toggleContainer}>
-                <TouchableOpacity
-                  style={[searchScreenStyles.toggleButton, searchMode === 'specific' && searchScreenStyles.toggleButtonActive]}
-                  onPress={() => setSearchMode('specific')}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[searchScreenStyles.toggleButtonText, searchMode === 'specific' && searchScreenStyles.toggleButtonTextActive]}>
-                    بحث محدد
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[searchScreenStyles.toggleButton, searchMode === 'text' && searchScreenStyles.toggleButtonActive]}
-                  onPress={() => setSearchMode('text')}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[searchScreenStyles.toggleButtonText, searchMode === 'text' && searchScreenStyles.toggleButtonTextActive]}>
-                    بحث في النص
-                  </Text>
-                </TouchableOpacity>
+              {/* Main Search Field */}
+              <View style={searchScreenStyles.fieldGroup}>
+                <Text style={searchScreenStyles.label}>ابحث في نص الآيات</Text>
+                <TextInput
+                  style={searchScreenStyles.textInput}
+                  placeholder="أدخل كلمة أو جملة للبحث (مثال: اعوذ، الصلاة، الله)"
+                  placeholderTextColor="#bfa76f"
+                  value={ayahTextQuery}
+                  onChangeText={setAyahTextQuery}
+                  textAlign="right"
+                  multiline={false}
+                  returnKeyType="search"
+                  onSubmitEditing={handleSearch}
+                />
+                <Text style={searchScreenStyles.searchHint}>
+                  💡 البحث يتجاهل الحركات التشكيلية والهمزات المختلفة
+                </Text>
               </View>
 
-              {searchMode === 'specific' ? (
-                <>
+              {/* Advanced Options Toggle */}
+              <TouchableOpacity
+                style={searchScreenStyles.advancedToggle}
+                onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name={showAdvancedOptions ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#7c5c1e" 
+                  style={{ marginLeft: 6 }}
+                />
+                <Text style={searchScreenStyles.advancedToggleText}>
+                  خيارات متقدمة (اختياري)
+                </Text>
+              </TouchableOpacity>
+
+              {/* Advanced Options */}
+              {showAdvancedOptions && (
+                <View style={searchScreenStyles.advancedContainer}>
                   <View style={searchScreenStyles.fieldGroup}>
-                    <Text style={searchScreenStyles.label}>اسم السورة</Text>
+                    <Text style={searchScreenStyles.label}>تحديد السورة</Text>
                     <TouchableOpacity
                       style={searchScreenStyles.input}
                       onPress={handleOpenSurahModal}
@@ -329,12 +351,26 @@ export default function SearchScreen({ navigation }) {
                     >
                       <Ionicons name="chevron-down" size={18} color="#bfa76f" style={{ marginLeft: 0, marginRight: 8 }} />
                       <Text style={{ color: surahQuery ? '#2c2c2c' : '#bfa76f', fontSize: 16, textAlign: 'right', fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif', flex: 1 }}>
-                        {surahQuery ? surahQuery : 'اختر السورة...'}
+                        {surahQuery ? surahQuery : 'الكل (جميع السور)'}
                       </Text>
                     </TouchableOpacity>
+                    {selectedSurahObj && (
+                      <TouchableOpacity 
+                        style={searchScreenStyles.clearFilterButton}
+                        onPress={() => {
+                          setSelectedSurahObj(null);
+                          setSurahQuery('');
+                          setAyahNumber('');
+                        }}
+                      >
+                        <Ionicons name="close-circle" size={16} color="#bfa76f" />
+                        <Text style={searchScreenStyles.clearFilterText}>إلغاء التحديد</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
+
                   <View style={searchScreenStyles.fieldGroup}>
-                    <Text style={searchScreenStyles.label}>رقم الآية</Text>
+                    <Text style={searchScreenStyles.label}>تحديد رقم الآية</Text>
                     <TouchableOpacity
                       style={[searchScreenStyles.input, !selectedSurahObj && searchScreenStyles.inputDisabled]}
                       onPress={selectedSurahObj ? handleOpenAyahModal : undefined}
@@ -343,28 +379,19 @@ export default function SearchScreen({ navigation }) {
                     >
                       <Ionicons name="chevron-down" size={18} color="#bfa76f" style={{ marginLeft: 0, marginRight: 8 }} />
                       <Text style={{ color: ayahNumber ? '#2c2c2c' : '#bfa76f', fontSize: 16, textAlign: 'right', fontFamily: Platform.OS === 'ios' ? 'Cochin' : 'serif', flex: 1 }}>
-                        {ayahNumber ? ayahNumber : selectedSurahObj ? 'اختر رقم الآية...' : 'اختر السورة أولاً'}
+                        {ayahNumber ? ayahNumber : selectedSurahObj ? 'الكل (جميع الآيات)' : 'اختر السورة أولاً'}
                       </Text>
                     </TouchableOpacity>
+                    {ayahNumber && (
+                      <TouchableOpacity 
+                        style={searchScreenStyles.clearFilterButton}
+                        onPress={() => setAyahNumber('')}
+                      >
+                        <Ionicons name="close-circle" size={16} color="#bfa76f" />
+                        <Text style={searchScreenStyles.clearFilterText}>إلغاء التحديد</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                </>
-              ) : (
-                <View style={searchScreenStyles.fieldGroup}>
-                  <Text style={searchScreenStyles.label}>ابحث في نص الآيات</Text>
-                  <TextInput
-                    style={searchScreenStyles.textInput}
-                    placeholder="أدخل كلمة أو جملة للبحث (مثال: اعوذ، الصلاة، الله)"
-                    placeholderTextColor="#bfa76f"
-                    value={ayahTextQuery}
-                    onChangeText={setAyahTextQuery}
-                    textAlign="right"
-                    multiline={false}
-                    returnKeyType="search"
-                    onSubmitEditing={handleSearch}
-                  />
-                  <Text style={searchScreenStyles.searchHint}>
-                    💡 البحث يتجاهل الحركات التشكيلية والهمزات المختلفة
-                  </Text>
                 </View>
               )}
 
@@ -385,18 +412,20 @@ export default function SearchScreen({ navigation }) {
                 </View>
               ) : null}
 
-              {/* Results for text search */}
+              {/* Search Results */}
               {results.length > 0 && (
-                <View style={searchScreenStyles.resultsContainer}>
+                <View
+                  style={searchScreenStyles.resultsContainer}
+                  onLayout={e => {
+                    resultsYRef.current = e.nativeEvent.layout.y;
+                  }}
+                >
                   <Text style={searchScreenStyles.resultsHeader}>
                     تم العثور على {results.length} آية
                   </Text>
                   {results.map((ayahData, index) => renderAyahResult(ayahData, index))}
                 </View>
               )}
-
-              {/* Single result for specific search */}
-              {result && renderAyahResult(result)}
             </View>
           </View>
         </ScrollView>
