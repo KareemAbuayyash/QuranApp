@@ -1,6 +1,6 @@
 // screens/HomeScreen.js
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing, ActivityIndicator, Modal, FlatList } from 'react-native';
+import { View, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing, ActivityIndicator, Modal, FlatList, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import homeScreenStyles from '../styles/HomeScreenStyles';
 import * as FileSystem from 'expo-file-system';
@@ -101,6 +101,11 @@ export default function HomeScreen({ navigation }) {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
+      <ScrollView 
+        style={{ flex: 1, width: '100%' }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 20 }}
+        showsVerticalScrollIndicator={false}
+      >
       <View style={homeScreenStyles.card}>
         <View style={homeScreenStyles.logoGlowContainer}>
           <View style={homeScreenStyles.logoGlow} />
@@ -145,6 +150,7 @@ export default function HomeScreen({ navigation }) {
         )}
         <Text style={homeScreenStyles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
