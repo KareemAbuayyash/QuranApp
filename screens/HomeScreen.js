@@ -125,6 +125,10 @@ export default function HomeScreen({ navigation }) {
           <Text style={homeScreenStyles.buttonIcon}>🎵</Text>
           <Text style={homeScreenStyles.buttonText}>عرض السور والصوتيات</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('TasbeehScreen')} activeOpacity={0.85}>
+          <Text style={homeScreenStyles.buttonIcon}>📿</Text>
+          <Text style={homeScreenStyles.buttonText}>التسبيح الرقمي</Text>
+        </TouchableOpacity>
         {showSource && surahData && (
           <View style={{ marginTop: 20, backgroundColor: '#fffbe6', borderRadius: 12, padding: 16 }}>
             <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>سورة: {surahData.name}</Text>

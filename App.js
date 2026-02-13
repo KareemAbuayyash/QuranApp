@@ -7,6 +7,7 @@ import SurahList      from './screens/SurahList';
 import SurahScreen    from './screens/SurahScreen';
 import SearchScreen   from './screens/SearchScreen';
 import AudioSurahList from './screens/AudioSurahList';
+import TasbeehScreen  from './screens/TasbeehScreen';
 import { useFonts }   from 'expo-font';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -55,6 +56,11 @@ export default function App() {
             <Stack.Screen
               name="AudioSurahList"
               component={AudioSurahList}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="TasbeehScreen"
+              component={TasbeehScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>
