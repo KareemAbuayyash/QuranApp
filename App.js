@@ -6,7 +6,6 @@ import HomeScreen     from './screens/HomeScreen';
 import SurahList      from './screens/SurahList';
 import SurahScreen    from './screens/SurahScreen';
 import SearchScreen   from './screens/SearchScreen';
-import AudioSurahList from './screens/AudioSurahList';
 import TasbeehScreen  from './screens/TasbeehScreen';
 import { useFonts }   from 'expo-font';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
@@ -53,11 +52,7 @@ export default function App() {
               component={SearchScreen}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
-              name="AudioSurahList"
-              component={AudioSurahList}
-              options={{ headerShown: false }}
-            />
+            {/* Removed: AudioSurahList screen */}
             <Stack.Screen
               name="TasbeehScreen"
               component={TasbeehScreen}

@@ -126,28 +126,11 @@ export default function HomeScreen({ navigation }) {
           <Text style={homeScreenStyles.buttonIcon}>🔍</Text>
           <Text style={homeScreenStyles.buttonText}>البحث عن آية وتفسيرها</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('AudioSurahList')} activeOpacity={0.85}>
-          <Text style={homeScreenStyles.buttonIcon}>🎵</Text>
-          <Text style={homeScreenStyles.buttonText}>عرض السور والصوتيات</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('TasbeehScreen')} activeOpacity={0.85}>
           <Text style={homeScreenStyles.buttonIcon}>📿</Text>
           <Text style={homeScreenStyles.buttonText}>التسبيح الرقمي</Text>
         </TouchableOpacity>
-        {showSource && surahData && (
-          <View style={{ marginTop: 20, backgroundColor: '#fffbe6', borderRadius: 12, padding: 16 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>سورة: {surahData.name}</Text>
-            <Text style={{ marginBottom: 8 }}>عدد الآيات: {surahData.count}</Text>
-            <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>الآيات:</Text>
-            {Object.values(surahData.verse).map((v, i) => (
-              <Text key={i} style={{ fontSize: 16, marginBottom: 2 }}>{v}</Text>
-            ))}
-            <Text style={{ fontWeight: 'bold', marginTop: 10, marginBottom: 4 }}>ملفات الصوت:</Text>
-            {audioFiles.map((audio, i) => (
-              <Text key={i} style={{ fontSize: 15 }}>ملف {i + 1}</Text>
-            ))}
-          </View>
-        )}
+        {/* تم حذف كل ما يتعلق بالصوتيات والسور */}
         <Text style={homeScreenStyles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
       </View>
       </ScrollView>
