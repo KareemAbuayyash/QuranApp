@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import surahList from '../assets/source/surah.json';
+import juzMap from '../assets/source/juzMap';
+import juzMeta from '../assets/source/juzMeta';
+import JuzListBanner from '../components/JuzListBanner';
 import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
@@ -42,6 +45,30 @@ export default function SurahList({ navigation }) {
       parseInt(item.index, 10).toString().includes(text)
     );
   }, [searchText]);
+
+  // بناء قائمة تعرض بداية كل جزء (juz) في مكانها
+  const surahWithJuz = useMemo(() => {
+    // خريطة: رقم السورة -> أرقام الأجزاء التي تبدأ عندها
+    const surahToJuz = {};
+    Object.entries(juzMap).forEach(([juzNum, ranges]) => {
+      if (ranges.length > 0) {
+        const first = ranges[0];
+        if (!surahToJuz[first.surah]) surahToJuz[first.surah] = [];
+        surahToJuz[first.surah].push(juzNum);
+      }
+    });
+    // بناء القائمة
+    const result = [];
+    filteredSurahList.forEach((s) => {
+      if (surahToJuz[s.index]) {
+        surahToJuz[s.index].forEach(juzNum => {
+          result.push({ type: 'juz', juzNum });
+        });
+      }
+      result.push({ type: 'surah', surah: s });
+    });
+    return result;
+  }, [filteredSurahList]);
 
   // Show loading screen
   if (loading) {
@@ -81,25 +108,46 @@ export default function SurahList({ navigation }) {
           textAlign="right"
         />
         <FlatList
-          data={filteredSurahList}
-          keyExtractor={item => parseInt(item.index, 10).toString()}
+          data={surahWithJuz}
+          keyExtractor={(item, idx) => item.type === 'juz' ? `juz-${item.juzNum}-${idx}` : `surah-${item.surah.index}`}
           contentContainerStyle={surahListStyles.listContent}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.surahItem}
-              onPress={() => {
-                navigation.navigate('SurahScreen', { number: parseInt(item.index, 10).toString() });
-              }}
-            >
-              <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {parseInt(item.index, 10)}. {item.titleAr} ({item.title}) </Text>
-              <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
-                {revelationTypeMap[parseInt(item.index, 10).toString()]
-                  ? `(${revelationTypeMap[parseInt(item.index, 10).toString()]})`
-                  : ''}
-              </Text>
-              <Text style={{ fontSize: 14, color: '#bfa76f' }}>عدد الآيات: {item.count}</Text>
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => {
+            if (item.type === 'juz') {
+              // جلب بيانات بداية الجزء
+              const meta = juzMeta.find(j => j.index === item.juzNum);
+              if (!meta || !meta.start) return <JuzListBanner currentJuz={item.juzNum} />;
+              return (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.navigate('SurahScreen', {
+                      number: String(parseInt(meta.start.surah, 10)),
+                      scrollToVerse: meta.start.verse ? Number(meta.start.verse.replace('verse_', '')) : 1
+                    });
+                  }}
+                >
+                  <JuzListBanner currentJuz={item.juzNum} />
+                </TouchableOpacity>
+              );
+            }
+            const s = item.surah;
+            return (
+              <TouchableOpacity
+                style={styles.surahItem}
+                onPress={() => {
+                  navigation.navigate('SurahScreen', { number: parseInt(s.index, 10).toString() });
+                }}
+              >
+                <Text style={[styles.surahName, { fontFamily: 'UthmaniFull' }]}> {parseInt(s.index, 10)}. {s.titleAr} ({s.title}) </Text>
+                <Text style={{ fontFamily: 'UthmaniFull', fontSize: 16, color: '#7c5c1e', marginTop: 2 }}>
+                  {revelationTypeMap[parseInt(s.index, 10).toString()]
+                    ? `(${revelationTypeMap[parseInt(s.index, 10).toString()]})`
+                    : ''}
+                </Text>
+                <Text style={{ fontSize: 14, color: '#bfa76f' }}>عدد الآيات: {s.count}</Text>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
     </SafeAreaView>

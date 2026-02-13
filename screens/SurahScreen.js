@@ -14,9 +14,37 @@ const { width } = Dimensions.get('window');
 const AYAHS_PER_PAGE = 15; // Adjust this number based on your preference
 
 export default function SurahScreen({ route, navigation }) {
-  const { number, autoPlay } = route.params;
+  const { number, autoPlay, scrollToVerse } = route.params || {};
   const surah = surahJsonFiles[number];
-  const [currentPage, setCurrentPage] = useState(0);
+  // إذا تم تمرير scrollToVerse، احسب الصفحة التي تحتوي على هذه الآية
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (scrollToVerse && surahJsonFiles[number] && surahJsonFiles[number].verse) {
+      const ayahKeys = Object.keys(surahJsonFiles[number].verse)
+        .sort((a, b) => parseInt(a.replace('verse_', '')) - parseInt(b.replace('verse_', '')));
+      const idx = ayahKeys.findIndex(k => parseInt(k.replace('verse_', '')) === scrollToVerse);
+      if (idx >= 0) return Math.floor(idx / AYAHS_PER_PAGE);
+    }
+    return 0;
+  });
+    // Scroll تلقائي للآية المطلوبة عند أول تحميل
+    useEffect(() => {
+      if (scrollToVerse && scrollViewRef.current && ayahs.length) {
+        // ابحث عن ترتيب الآية المطلوبة في الصفحة الحالية
+        const ayahIdx = ayahs.findIndex(a => a.verseKey === scrollToVerse);
+        if (ayahIdx >= 0) {
+          // إذا كانت الآية ضمن الصفحة الحالية، مرر إليها
+          const pageStart = currentPage * AYAHS_PER_PAGE;
+          const idxInPage = ayahIdx - pageStart;
+          if (idxInPage >= 0 && idxInPage < AYAHS_PER_PAGE) {
+            setTimeout(() => {
+              // مرر للأسفل بمقدار تقريبي (يمكنك تحسينه لاحقًا)
+              scrollViewRef.current?.scrollTo({ y: idxInPage * 60, animated: true });
+            }, 600);
+          }
+        }
+      }
+      // eslint-disable-next-line
+    }, [scrollToVerse, ayahs, currentPage]);
   const scrollViewRef = useRef(null);
   const [sound, setSound] = useState(null);
   const [playingAyah, setPlayingAyah] = useState(null);
