@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 export default function TasbeehScreen({ navigation }) {
   const [count, setCount] = useState(0);
   const [selectedDhikr, setSelectedDhikr] = useState('اضغط على أحد الأذكار');
+  const [dhikrHistory, setDhikrHistory] = useState({});
   const [showDhikrList, setShowDhikrList] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -31,7 +32,16 @@ export default function TasbeehScreen({ navigation }) {
   ];
 
   const handlePress = () => {
-    setCount(count + 1);
+    const newCount = count + 1;
+    setCount(newCount);
+    
+    // Update history if a dhikr is selected
+    if (selectedDhikr !== 'اضغط على أحد الأذكار') {
+      setDhikrHistory(prev => ({
+        ...prev,
+        [selectedDhikr]: newCount
+      }));
+    }
     
     // Animate button press
     Animated.sequence([
@@ -51,15 +61,19 @@ export default function TasbeehScreen({ navigation }) {
   const handleReset = () => {
     Alert.alert(
       'تصفير العداد',
-      'هل أنت متأكد من التصفير؟',
+      'هل أنت متأكد من تصفير جميع الأذكار؟',
       [
         {
           text: 'إلغاء',
           style: 'cancel',
         },
         {
-          text: 'تصفير',
-          onPress: () => setCount(0),
+          text: 'تصفير الكل',
+          onPress: () => {
+            setCount(0);
+            setDhikrHistory({});
+            setSelectedDhikr('اضغط على أحد الأذكار');
+          },
           style: 'destructive',
         },
       ],
@@ -70,6 +84,8 @@ export default function TasbeehScreen({ navigation }) {
   const handleDhikrSelect = (dhikr) => {
     setSelectedDhikr(dhikr);
     setShowDhikrList(false);
+    // Load existing count for this dhikr if available
+    setCount(dhikrHistory[dhikr] || 0);
   };
 
   return (
@@ -87,7 +103,7 @@ export default function TasbeehScreen({ navigation }) {
           style={tasbeehScreenStyles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-forward" size={24} color="#7c5c1e" />
+          <Ionicons name="arrow-back" size={24} color="#7c5c1e" />
         </TouchableOpacity>
         <Text style={tasbeehScreenStyles.headerTitle}>التسبيح الرقمي</Text>
         <View style={{ width: 40 }} />
@@ -160,6 +176,21 @@ export default function TasbeehScreen({ navigation }) {
             hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
           />
         </View>
+
+        {/* Dhikr History List */}
+        {Object.keys(dhikrHistory).length > 0 && (
+          <View style={tasbeehScreenStyles.historyContainer}>
+            <Text style={tasbeehScreenStyles.historyTitle}>سجل التسبيحات</Text>
+            {Object.entries(dhikrHistory).map(([dhikr, dhikrCount]) => (
+              <View key={dhikr} style={tasbeehScreenStyles.historyItem}>
+                <Text style={tasbeehScreenStyles.historyDhikr}>{dhikr}</Text>
+                <View style={tasbeehScreenStyles.historyCountBadge}>
+                  <Text style={tasbeehScreenStyles.historyCount}>{dhikrCount}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
