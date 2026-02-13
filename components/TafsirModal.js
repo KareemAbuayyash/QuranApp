@@ -7,10 +7,13 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
-  Dimensions
+  Dimensions,
+  Share,
+  Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getAyahTafsir, TAFSIR_OPTIONS } from '../services/tafsirService';
+import surahList from '../assets/quran/surah-list.json';
 
 const { width, height } = Dimensions.get('window');
 
@@ -51,6 +54,48 @@ export default function TafsirModal({ visible, onClose, surahNumber, ayahNumber,
     return option ? option.name : 'التفسير الميسر';
   };
 
+  const getSurahName = (surahNum) => {
+    const surah = surahList.find(s => s.number === surahNum);
+    return surah ? surah.name : `سورة رقم ${surahNum}`;
+  };
+
+  const handleShare = async () => {
+    if (!tafsir || !ayahText) {
+      Alert.alert('خطأ', 'لا يوجد محتوى للمشاركة');
+      return;
+    }
+
+    try {
+      const message = `
+━━━━━━━━━━━━━━━━━━━━
+📖 الآية ${ayahNumber} من سورة ${getSurahName(surahNumber)}
+
+${ayahText}
+
+━━━━━━━━━━━━━━━━━━━━
+${getTafsirName(selectedTafsir)}:
+
+${tafsir.tafsirText}
+━━━━━━━━━━━━━━━━━━━━
+      `.trim();
+
+      const result = await Share.share({
+        message: message,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // تمت المشاركة بنجاح
+        } else {
+          // تمت المشاركة
+        }
+      }
+    } catch (error) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء المشاركة');
+      console.error('Error sharing:', error);
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -62,11 +107,22 @@ export default function TafsirModal({ visible, onClose, surahNumber, ayahNumber,
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <MaterialIcons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>
               التفسير - الآية {ayahNumber}
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <MaterialIcons name="close" size={28} color="#fff" />
+            <TouchableOpacity 
+              onPress={handleShare} 
+              style={styles.shareButton}
+              disabled={!tafsir || loading}
+            >
+              <MaterialIcons 
+                name="share" 
+                size={24} 
+                color={!tafsir || loading ? '#999' : '#fff'} 
+              />
             </TouchableOpacity>
           </View>
 
@@ -169,6 +225,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   closeButton: {
+    padding: 5
+  },
+  shareButton: {
     padding: 5
   },
   tafsirSelector: {
