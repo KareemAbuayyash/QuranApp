@@ -1,6 +1,7 @@
 // screens/TasbeehScreen.js
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView, Animated, ScrollView, Image, ImageBackground, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Animated, ScrollView, Image, ImageBackground, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import tasbeehScreenStyles from '../styles/TasbeehScreenStyles';
 import { Ionicons } from '@expo/vector-icons';

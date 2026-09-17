@@ -10,11 +10,11 @@ import {
   I18nManager,
   Dimensions,
   KeyboardAvoidingView,
-  SafeAreaView,
   Modal,
   FlatList,
   Share,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import surahs from '../assets/quran/surahs';
 import surahList from '../assets/quran/surah-list.json';
 import { LinearGradient } from 'expo-linear-gradient';

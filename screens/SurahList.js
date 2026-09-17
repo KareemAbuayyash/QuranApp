@@ -4,15 +4,12 @@ import {
   Text,
   TouchableOpacity,
   FlatList,
-  SafeAreaView,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import surahList from '../assets/source/surah.json';
-import juzMap from '../assets/source/juzMap';
-import juzMeta from '../assets/source/juzMeta';
-import JuzListBanner from '../components/JuzListBanner';
 import surahListStyles from '../styles/SurahListStyles';
 import styles from '../styles/AudioSurahListStyles';
 import revelationTypeMap from '../assets/source/revelationTypeMap';
@@ -47,30 +44,6 @@ export default function SurahList({ navigation }) {
     );
   }, [searchText]);
 
-  // بناء قائمة تعرض بداية كل جزء (juz) في مكانها
-  const surahWithJuz = useMemo(() => {
-    // خريطة: رقم السورة -> أرقام الأجزاء التي تبدأ عندها
-    const surahToJuz = {};
-    Object.entries(juzMap).forEach(([juzNum, ranges]) => {
-      if (ranges.length > 0) {
-        const first = ranges[0];
-        if (!surahToJuz[first.surah]) surahToJuz[first.surah] = [];
-        surahToJuz[first.surah].push(juzNum);
-      }
-    });
-    // بناء القائمة
-    const result = [];
-    filteredSurahList.forEach((s) => {
-      if (surahToJuz[s.index]) {
-        surahToJuz[s.index].forEach(juzNum => {
-          result.push({ type: 'juz', juzNum });
-        });
-      }
-      result.push({ type: 'surah', surah: s });
-    });
-    return result;
-  }, [filteredSurahList]);
-
   // Show loading screen
   if (loading) {
     return (
@@ -100,19 +73,30 @@ export default function SurahList({ navigation }) {
           <TouchableOpacity
             style={{ padding: 8, backgroundColor: '#bfa76f', borderRadius: 8 }}
             onPress={async () => {
-              // جلب آخر إشارة حفظ
-              const keys = await AsyncStorage.getAllKeys();
-              const savedKey = keys.find(k => k.startsWith('savedPage-surah-'));
-              if (!savedKey) {
-                alert('لا يوجد صفحة محفوظة');
-                return;
+              try {
+                let surahNum = await AsyncStorage.getItem('lastSavedSurah');
+                if (!surahNum) {
+                  const keys = await AsyncStorage.getAllKeys();
+                  const savedKey = keys.find((key) => key.startsWith('savedPage-surah-'));
+                  surahNum = savedKey?.replace('savedPage-surah-', '');
+                }
+                if (!surahNum) {
+                  alert('لا توجد صفحة محفوظة');
+                  return;
+                }
+                const savedPage = await AsyncStorage.getItem(`savedPage-surah-${surahNum}`);
+                const pageNumber = Number.parseInt(savedPage, 10);
+                if (!Number.isInteger(pageNumber) || pageNumber < 0) {
+                  alert('بيانات الصفحة المحفوظة غير صالحة');
+                  return;
+                }
+                navigation.navigate('SurahScreen', {
+                  number: surahNum,
+                  savedPage: pageNumber,
+                });
+              } catch (error) {
+                alert('تعذر فتح الصفحة المحفوظة');
               }
-              const savedPage = await AsyncStorage.getItem(savedKey);
-              const surahNum = savedKey.replace('savedPage-surah-', '');
-              navigation.navigate('SurahScreen', {
-                number: surahNum,
-                savedPage: parseInt(savedPage, 10)
-              });
             }}
           >
             <Ionicons name="bookmark" size={24} color="#fff" />
@@ -128,29 +112,11 @@ export default function SurahList({ navigation }) {
           textAlign="right"
         />
         <FlatList
-          data={surahWithJuz}
-          keyExtractor={(item, idx) => item.type === 'juz' ? `juz-${item.juzNum}-${idx}` : `surah-${item.surah.index}`}
+          data={filteredSurahList}
+          keyExtractor={(item) => `surah-${item.index}`}
           contentContainerStyle={surahListStyles.listContent}
           renderItem={({ item }) => {
-            if (item.type === 'juz') {
-              // جلب بيانات بداية الجزء
-              const meta = juzMeta.find(j => j.index === item.juzNum);
-              if (!meta || !meta.start) return <JuzListBanner currentJuz={item.juzNum} />;
-              return (
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    navigation.navigate('SurahScreen', {
-                      number: String(parseInt(meta.start.surah, 10)),
-                      scrollToVerse: meta.start.verse ? Number(meta.start.verse.replace('verse_', '')) : 1
-                    });
-                  }}
-                >
-                  <JuzListBanner currentJuz={item.juzNum} />
-                </TouchableOpacity>
-              );
-            }
-            const s = item.surah;
+            const s = item;
             return (
               <TouchableOpacity
                 style={styles.surahItem}

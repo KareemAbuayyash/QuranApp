@@ -1,6 +1,7 @@
 // screens/HomeScreen.js
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Image, Text, TouchableOpacity, SafeAreaView, Animated, Easing, ActivityIndicator, Modal, FlatList, ScrollView } from 'react-native';
+import { View, Image, Text, TouchableOpacity, Animated, Easing, ActivityIndicator, Modal, FlatList, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import homeScreenStyles from '../styles/HomeScreenStyles';
 import * as FileSystem from 'expo-file-system';

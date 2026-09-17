@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image, ActivityIndicator } from 'react-native';
+import { ScrollView, Text, View, TouchableOpacity, Dimensions, Image, ActivityIndicator, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio } from 'expo-av';
+import { createAudioPlayer } from 'expo-audio';
 import surahJsonFiles from '../assets/source/surahJsonFiles';
 import audioFiles from '../assets/source/audioFiles';
 import surahScreenStyles from '../styles/SurahScreenStyles';
@@ -32,44 +32,40 @@ export default function SurahScreen({ route, navigation }) {
   });
     // حفظ الصفحة الحالية
     const saveCurrentPage = async () => {
-      if (typeof window !== 'undefined' && window.confirm) {
-        // للويب فقط
-        if (!window.confirm('هل تريد وضع علامة عند هذه الصفحة؟')) return;
-      } else {
-        // للهواتف: استخدم Alert من react-native
-        return new Promise((resolve) => {
-          import('react-native').then(({ Alert }) => {
-            Alert.alert(
-              'تأكيد',
-              'هل تريد وضع علامة عند هذه الصفحة؟',
-              [
-                { text: 'لا', style: 'cancel', onPress: () => resolve(false) },
-                { text: 'نعم', onPress: () => resolve(true) }
-              ],
-              { cancelable: true }
-            );
-          });
-        }).then(async (confirmed) => {
-          if (!confirmed) return;
-          try {
-            await AsyncStorage.setItem(`savedPage-surah-${number}`, currentPage.toString());
-            import('react-native').then(({ Alert }) => {
-              Alert.alert('تم الحفظ', 'تم حفظ الصفحة بنجاح!');
-            });
-          } catch (e) {
-            import('react-native').then(({ Alert }) => {
-              Alert.alert('خطأ', 'حدث خطأ أثناء الحفظ');
-            });
+      const save = async () => {
+        try {
+          await AsyncStorage.multiSet([
+            [`savedPage-surah-${number}`, currentPage.toString()],
+            ['lastSavedSurah', number.toString()],
+          ]);
+          if (typeof window !== 'undefined' && window.alert) {
+            window.alert('تم حفظ الصفحة بنجاح!');
+          } else {
+            Alert.alert('تم الحفظ', 'تم حفظ الصفحة بنجاح!');
           }
-        });
+        } catch (error) {
+          if (typeof window !== 'undefined' && window.alert) {
+            window.alert('حدث خطأ أثناء الحفظ');
+          } else {
+            Alert.alert('خطأ', 'حدث خطأ أثناء الحفظ');
+          }
+        }
+      };
+
+      if (typeof window !== 'undefined' && window.confirm) {
+        if (window.confirm('هل تريد وضع علامة عند هذه الصفحة؟')) await save();
         return;
       }
-      try {
-        await AsyncStorage.setItem(`savedPage-surah-${number}`, currentPage.toString());
-        alert('تم حفظ الصفحة بنجاح!');
-      } catch (e) {
-        alert('حدث خطأ أثناء الحفظ');
-      }
+
+      Alert.alert(
+        'تأكيد',
+        'هل تريد وضع علامة عند هذه الصفحة؟',
+        [
+          { text: 'لا', style: 'cancel' },
+          { text: 'نعم', onPress: save },
+        ],
+        { cancelable: true }
+      );
     };
     // Scroll تلقائي للآية المطلوبة عند أول تحميل
     useEffect(() => {
@@ -92,6 +88,8 @@ export default function SurahScreen({ route, navigation }) {
     }, [scrollToVerse, ayahs, currentPage]);
   const scrollViewRef = useRef(null);
   const [sound, setSound] = useState(null);
+  const soundRef = useRef(null);
+  const playbackResolveRef = useRef(null);
   const [playingAyah, setPlayingAyah] = useState(null);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
   const playAllRef = useRef(false);
@@ -146,16 +144,17 @@ export default function SurahScreen({ route, navigation }) {
   useEffect(() => {
     // Cleanup function to stop audio when leaving the screen
     return () => {
-      if (sound) {
-        sound.getStatusAsync().then(status => {
-          if (status.isLoaded) {
-            sound.stopAsync();
-            sound.unloadAsync();
-          }
-        });
+      playAllRef.current = false;
+      const currentSound = soundRef.current;
+      if (currentSound) {
+        currentSound.pause();
+        currentSound.remove();
+        soundRef.current = null;
       }
+      playbackResolveRef.current?.();
+      playbackResolveRef.current = null;
     };
-  }, [sound]);
+  }, []);
 
   useEffect(() => {
     if (autoPlay && !loading) {
@@ -206,12 +205,11 @@ export default function SurahScreen({ route, navigation }) {
   };
 
   const handlePlayAudio = async (ayahIdx) => {
-    if (sound) {
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-        await sound.stopAsync();
-      await sound.unloadAsync();
-      }
+    const currentSound = soundRef.current;
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.remove();
+      soundRef.current = null;
       setSound(null);
       setPlayingAyah(null);
       if (playingAyah === ayahIdx) return;
@@ -224,30 +222,37 @@ export default function SurahScreen({ route, navigation }) {
       return;
     }
     try {
-      const { sound: newSound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
+      const newSound = createAudioPlayer(source, { updateInterval: 100 });
+      soundRef.current = newSound;
       setSound(newSound);
       setPlayingAyah(ayahIdx);
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
+      newSound.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish || (status.duration > 0 && status.currentTime >= status.duration && !status.playing)) {
+          newSound.remove();
+          if (soundRef.current === newSound) {
+            soundRef.current = null;
+            setSound(null);
+          }
           setPlayingAyah(null);
-          setSound(null);
         }
       });
+      newSound.play();
     } catch (e) {
       alert('تعذر تشغيل الصوت');
     }
   };
 
   const handleStopAudio = async () => {
-    if (sound && playingAyah !== null) {
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
-      }
+    const currentSound = soundRef.current;
+    if (currentSound && playingAyah !== null) {
+      currentSound.pause();
+      currentSound.remove();
+      soundRef.current = null;
       setSound(null);
       setPlayingAyah(null);
       setLastPlayedAyahIdx(playingAyah);
+      playbackResolveRef.current?.();
+      playbackResolveRef.current = null;
     }
   };
 
@@ -257,15 +262,16 @@ export default function SurahScreen({ route, navigation }) {
       // Stop all
       setIsPlayingAll(false);
       playAllRef.current = false;
-      if (sound) {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-        await sound.stopAsync();
-        await sound.unloadAsync();
-        }
+      const currentSound = soundRef.current;
+      if (currentSound) {
+        currentSound.pause();
+        currentSound.remove();
+        soundRef.current = null;
         setSound(null);
         setPlayingAyah(null);
       }
+      playbackResolveRef.current?.();
+      playbackResolveRef.current = null;
       setLastPlayedAyahIdx(playingAyah);
       return;
     }
@@ -291,18 +297,26 @@ export default function SurahScreen({ route, navigation }) {
       }
       try {
         setPlayingAyah(idx);
-        const { sound: newSound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
+        const newSound = createAudioPlayer(source, { updateInterval: 100 });
+        soundRef.current = newSound;
         setSound(newSound);
         await new Promise((resolve) => {
-          newSound.setOnPlaybackStatusUpdate((status) => {
-            if (status.isLoaded && status.didJustFinish) {
+          playbackResolveRef.current = resolve;
+          newSound.addListener('playbackStatusUpdate', (status) => {
+            if (status.didJustFinish || (status.duration > 0 && status.currentTime >= status.duration && !status.playing)) {
               resolve();
             }
           });
+          newSound.play();
         });
-        await newSound.unloadAsync();
-        setSound(null);
-        setPlayingAyah(null);
+        playbackResolveRef.current = null;
+        newSound.pause();
+        newSound.remove();
+        if (soundRef.current === newSound) {
+          soundRef.current = null;
+          setSound(null);
+          setPlayingAyah(null);
+        }
         setLastPlayedAyahIdx(idx);
       } catch (e) {
         // skip on error
@@ -323,19 +337,18 @@ export default function SurahScreen({ route, navigation }) {
     setIsRestarting(true);
     setLastPlayedAyahIdx(null);
     setCurrentPage(0);
-                  if (isPlayingAll) {
-                    playAllRef.current = false;
-                    setIsPlayingAll(false);
-                    if (sound) {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-                      await sound.stopAsync();
-                      await sound.unloadAsync();
-        }
-                      setSound(null);
-                      setPlayingAyah(null);
-                    }
-                  }
+    playAllRef.current = false;
+    setIsPlayingAll(false);
+    const currentSound = soundRef.current;
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.remove();
+      soundRef.current = null;
+      setSound(null);
+      setPlayingAyah(null);
+    }
+    playbackResolveRef.current?.();
+    playbackResolveRef.current = null;
     setTimeout(() => {
       playAllAyahs(true);
       setIsRestarting(false);
