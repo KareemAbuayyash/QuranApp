@@ -27,11 +27,12 @@ const searchScreenStyles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    minHeight: 56,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-    paddingVertical: 12,
+    paddingVertical: 8,
     backgroundColor: 'rgba(255, 249, 239, 0.8)',
     borderBottomWidth: 1,
     borderBottomColor: '#e0cfa9',
@@ -58,8 +59,10 @@ const searchScreenStyles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
-    backgroundColor: 'rgba(191, 167, 111, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0cfa9',
+    backgroundColor: '#f8ecd4',
   },
   fieldGroup: {
     width: '100%',
@@ -509,4 +512,4 @@ const searchScreenStyles = StyleSheet.create({
   },
 });
 
-export default searchScreenStyles; 
+export default searchScreenStyles;

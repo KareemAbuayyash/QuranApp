@@ -45,6 +45,7 @@ const surahScreenStyles = StyleSheet.create({
     paddingBottom: 12,
   },
   surahBanner: {
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -52,14 +53,19 @@ const surahScreenStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0cfa9',
     marginHorizontal: 0,
-    marginBottom: 18,
-    paddingVertical: 12,
+    marginBottom: 10,
+    paddingVertical: 8,
     paddingHorizontal: 20,
   },
   headerButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(191, 167, 111, 0.1)',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0cfa9',
+    backgroundColor: '#f8ecd4',
   },
   headerTitleContainer: {
     flex: 1,
@@ -264,4 +270,4 @@ const surahScreenStyles = StyleSheet.create({
   },
 });
 
-export default surahScreenStyles; 
+export default surahScreenStyles;

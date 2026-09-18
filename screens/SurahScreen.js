@@ -6,6 +6,7 @@ import surahJsonFiles from '../assets/source/surahJsonFiles';
 import audioFiles from '../assets/source/audioFiles';
 import surahScreenStyles from '../styles/SurahScreenStyles';
 import { MaterialIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SurahHeader from '../components/SurahHeader';
 import AyahList from '../components/AyahList';
 import PaginationControls from '../components/PaginationControls';
@@ -370,7 +371,7 @@ export default function SurahScreen({ route, navigation }) {
   };
 
   return (
-    <View style={surahScreenStyles.container}>
+    <SafeAreaView style={surahScreenStyles.container}>
       <View style={surahScreenStyles.pageBackground}>
         <SurahHeader
           surahName={surah.name}
@@ -417,6 +418,6 @@ export default function SurahScreen({ route, navigation }) {
         ayahNumber={selectedAyahForTafsir?.verseKey || selectedAyahForTafsir?.number}
         ayahText={selectedAyahForTafsir?.text}
       />
-    </View>
+    </SafeAreaView>
   );
 }

@@ -31,6 +31,7 @@ const surahListStyles = StyleSheet.create({
     paddingBottom: 12,
   },
   fullWidthBanner: {
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -38,16 +39,21 @@ const surahListStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0cfa9',
     marginTop: 0,
-    marginBottom: 16,
+    marginBottom: 10,
     marginStart: 0,
     marginEnd: 0,
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 20,
   },
   fullWidthBackButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(191, 167, 111, 0.1)',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0cfa9',
+    backgroundColor: '#f8ecd4',
   },
   fullWidthSurahNameContainer: {
     flex: 1,
@@ -65,7 +71,7 @@ const surahListStyles = StyleSheet.create({
   listContent: {
     paddingHorizontal: '3%',
     paddingBottom: 30,
-    paddingTop: 10,
+    paddingTop: 4,
     flexGrow: 1,
   },
   surahCard: {
@@ -310,4 +316,4 @@ const surahListStyles = StyleSheet.create({
   },
 });
 
-export default surahListStyles; 
+export default surahListStyles;

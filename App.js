@@ -10,7 +10,7 @@ import TasbeehScreen  from './screens/TasbeehScreen';
 import QiblaScreen    from './screens/QiblaScreen';
 import { useFonts }   from 'expo-font';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Home">
             <Stack.Screen 
@@ -66,7 +66,7 @@ export default function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-      </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }

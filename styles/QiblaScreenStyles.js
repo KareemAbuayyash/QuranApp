@@ -10,7 +10,7 @@ const qiblaStyles = StyleSheet.create({
     backgroundColor: '#fdf6ec',
   },
   header: {
-    minHeight: 70,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -20,10 +20,14 @@ const qiblaStyles = StyleSheet.create({
     backgroundColor: '#fff9ef',
   },
   iconButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0cfa9',
+    backgroundColor: '#f8ecd4',
   },
   headerCopy: {
     alignItems: 'center',
