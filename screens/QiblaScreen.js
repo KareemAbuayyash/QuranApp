@@ -187,6 +187,9 @@ export default function QiblaScreen({ navigation }) {
             <View style={qiblaStyles.compassStage}>
               <View style={qiblaStyles.compassOuter}>
                 <View style={qiblaStyles.compassInner}>
+                  <View style={[qiblaStyles.targetMarker, isAligned && qiblaStyles.targetMarkerReady]}>
+                    <MaterialIcons name="keyboard-arrow-up" size={34} color={isAligned ? '#3f7c4b' : '#bfa76f'} />
+                  </View>
                   <Text style={[qiblaStyles.direction, qiblaStyles.north]}>ش</Text>
                   <Text style={[qiblaStyles.direction, qiblaStyles.east]}>ق</Text>
                   <Text style={[qiblaStyles.direction, qiblaStyles.south]}>ج</Text>
