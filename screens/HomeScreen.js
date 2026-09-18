@@ -131,6 +131,10 @@ export default function HomeScreen({ navigation }) {
           <Text style={homeScreenStyles.buttonIcon}>📿</Text>
           <Text style={homeScreenStyles.buttonText}>التسبيح الرقمي</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={homeScreenStyles.button} onPress={() => handleNavigate('QiblaScreen')} activeOpacity={0.85}>
+          <Text style={homeScreenStyles.buttonIcon}>🧭</Text>
+          <Text style={homeScreenStyles.buttonText}>اتجاه القبلة</Text>
+        </TouchableOpacity>
         {/* تم حذف كل ما يتعلق بالصوتيات والسور */}
         <Text style={homeScreenStyles.footer}>© {new Date().getFullYear()} MyQuranApp</Text>
       </View>

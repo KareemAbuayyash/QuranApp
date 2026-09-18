@@ -33,7 +33,13 @@
     },
     "plugins": [
       "expo-status-bar",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يستخدم التطبيق موقعك لتحديد اتجاه القبلة بدقة."
+        }
+      ]
     ]
   }
 }
