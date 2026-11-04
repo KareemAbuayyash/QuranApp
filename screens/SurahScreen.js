@@ -68,25 +68,6 @@ export default function SurahScreen({ route, navigation }) {
         { cancelable: true }
       );
     };
-    // Scroll تلقائي للآية المطلوبة عند أول تحميل
-    useEffect(() => {
-      if (scrollToVerse && scrollViewRef.current && ayahs.length) {
-        // ابحث عن ترتيب الآية المطلوبة في الصفحة الحالية
-        const ayahIdx = ayahs.findIndex(a => a.verseKey === scrollToVerse);
-        if (ayahIdx >= 0) {
-          // إذا كانت الآية ضمن الصفحة الحالية، مرر إليها
-          const pageStart = currentPage * AYAHS_PER_PAGE;
-          const idxInPage = ayahIdx - pageStart;
-          if (idxInPage >= 0 && idxInPage < AYAHS_PER_PAGE) {
-            setTimeout(() => {
-              // مرر للأسفل بمقدار تقريبي (يمكنك تحسينه لاحقًا)
-              scrollViewRef.current?.scrollTo({ y: idxInPage * 60, animated: true });
-            }, 600);
-          }
-        }
-      }
-      // eslint-disable-next-line
-    }, [scrollToVerse, ayahs, currentPage]);
   const scrollViewRef = useRef(null);
   const [sound, setSound] = useState(null);
   const soundRef = useRef(null);
@@ -128,6 +109,26 @@ export default function SurahScreen({ route, navigation }) {
         };
       });
   }, [surah]);
+
+  // Scroll تلقائي للآية المطلوبة عند أول تحميل
+  useEffect(() => {
+    if (scrollToVerse && scrollViewRef.current && ayahs.length) {
+      // ابحث عن ترتيب الآية المطلوبة في الصفحة الحالية
+      const ayahIdx = ayahs.findIndex(a => a.verseKey === scrollToVerse);
+      if (ayahIdx >= 0) {
+        // إذا كانت الآية ضمن الصفحة الحالية، مرر إليها
+        const pageStart = currentPage * AYAHS_PER_PAGE;
+        const idxInPage = ayahIdx - pageStart;
+        if (idxInPage >= 0 && idxInPage < AYAHS_PER_PAGE) {
+          setTimeout(() => {
+            // مرر للأسفل بمقدار تقريبي (يمكنك تحسينه لاحقًا)
+            scrollViewRef.current?.scrollTo({ y: idxInPage * 60, animated: true });
+          }, 600);
+        }
+      }
+    }
+    // eslint-disable-next-line
+  }, [scrollToVerse, ayahs, currentPage]);
 
   // Split ayahs into pages
   const pages = useMemo(() => {

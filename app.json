@@ -24,7 +24,11 @@
       "package": "com.kareemabuayyash.qurankareemapp"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "experiments": {
+      "baseUrl": "/QuranApp"
     },
     "extra": {
       "eas": {
