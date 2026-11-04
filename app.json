@@ -4,23 +4,16 @@
     "slug": "quran-kareem-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/quran.jpg",
+    "icon": "./assets/quran-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/quran.jpg",
+        "foregroundImage": "./assets/quran-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.kareemabuayyash.qurankareemapp"
     },
     "web": {
@@ -42,6 +35,17 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "يستخدم التطبيق موقعك لتحديد اتجاه القبلة بدقة."
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
         }
       ]
     ]

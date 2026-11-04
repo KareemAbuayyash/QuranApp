@@ -14,7 +14,7 @@
 
 ## المتطلبات
 
-- Node.js بإصدار متوافق مع Expo SDK 57.
+- Node.js بإصدار متوافق مع Expo SDK 58.
 - npm.
 - Expo Go للتجربة على جهاز، أو محاكي Android/iOS. بعض ميزات الأجهزة، مثل اتجاه القبلة، تعتمد على توفر صلاحيات الموقع وحساس الاتجاه.
 
@@ -94,7 +94,7 @@ npx eas-cli build --profile production --platform android
 
 ## التقنيات المستخدمة
 
-- Expo SDK 57 وReact Native 0.86.
+- Expo SDK 58 وReact Native 0.88.
 - React 19 وReact Navigation 7.
 - `expo-audio` للصوت و`expo-location` للموقع واتجاه الجهاز.
 - AsyncStorage لحفظ موضع القراءة.
